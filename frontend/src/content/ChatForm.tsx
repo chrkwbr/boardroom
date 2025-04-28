@@ -17,10 +17,10 @@ const ChatForm = (props: { onSend: (chat: string) => void }) => {
   };
 
   return (
-    <div className="w-full py-5">
-      <form className="w-full" onSubmit={onSubmit}>
+    <div className="py-2">
+      <form onSubmit={onSubmit}>
         <div className="flex justify-center">
-          <div className="grid grid-cols-12 w-11/12">
+          <div className="grid grid-cols-12 w-full">
             <div className="col-span-10">
               <textarea
                 className="textarea textarea-secondary w-full"

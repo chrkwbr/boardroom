@@ -1,12 +1,9 @@
-import {useEffect} from 'react'
 import './App.css'
-import Header from './Header'
-import Sidebar from './Sidebar'
+import Sidebar from "./Sidebar.tsx"
 
 const App = () => {
   return (
     <div data-theme="">
-      <Header />
       <Sidebar />
     </div>
   )
