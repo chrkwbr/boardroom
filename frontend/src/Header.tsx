@@ -1,6 +1,6 @@
 const Header = () => {
   return (
-    <div className="flex navbar items-center justify-between border-b border-primary/25 py-2 top-0 z-30 sticky backdrop-blur bg-base-300">
+    <div className="flex navbar items-center justify-between border-b border-primary/50 py-2 top-0 z-30 sticky backdrop-blur bg-base-300">
       <div className="flex-1">
         {/*<h1 className="mx-1 font-bold">*/}
         {/*  <span className="text-3xl">Boardroom</span>*/}

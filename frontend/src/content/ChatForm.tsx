@@ -5,6 +5,21 @@ const ChatForm = (props: { onSend: (chat: string) => void }) => {
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    handleSubmit();
+  };
+
+  const handleChatChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setChat(e.target.value);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  };
+
+  const handleSubmit = () => {
     if (chat.trim() === "") {
       return;
     }
@@ -12,24 +27,21 @@ const ChatForm = (props: { onSend: (chat: string) => void }) => {
     setChat("");
   };
 
-  const handleChatChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setChat(e.target.value);
-  };
-
   return (
     <div className="py-2">
       <form onSubmit={onSubmit}>
         <div className="flex justify-center">
           <div className="grid grid-cols-12 w-full">
-            <div className="col-span-10">
+            <div className="col-span-10 px-1">
               <textarea
-                className="textarea textarea-secondary w-full"
+                className="textarea textarea-neutral w-full"
                 onChange={handleChatChange}
+                onKeyDown={handleKeyDown}
                 value={chat}
               >
               </textarea>
             </div>
-            <div className="col-span-2">
+            <div className="col-span-2 px-1">
               <button className="btn btn-primary">Send</button>
             </div>
           </div>
