@@ -1,8 +1,7 @@
-import {useCallback, useEffect, useState} from "react";
 import ChatHistory from "./ChatHistory.tsx";
 import ChatForm from "./ChatForm.tsx";
 import {fetchChats, IChat, postChat} from "./IChats.ts";
-import Header from "../Header.tsx";
+import {useCallback, useEffect, useState} from "react";
 
 const Content = () => {
   const [data, setData] = useState<IChat[]>([]);
@@ -29,18 +28,15 @@ const Content = () => {
   }, [data]);
 
   return (
-    <div className="flex flex-col w-full h-screen">
-      <Header />
-      <div className="flex flex-col flex-1 bg-base-100">
-        <div
-          className="h-0 flex-1 overflow-y-auto"
-          style={{ maxHeight: "calc(100vh - 10rem)" }}
-        >
-          <ChatHistory data={data} />
-        </div>
-        <div className="sticky bottom-0 left-0 right-0 bg-base-100">
-          <ChatForm onSend={handleSend} />
-        </div>
+    <div className="flex flex-col flex-1 bg-base-100">
+      <div
+        className="h-0 flex-1 overflow-y-auto"
+        style={{ maxHeight: "calc(100vh - 10rem)" }}
+      >
+        <ChatHistory data={data} />
+      </div>
+      <div className="sticky bottom-0 left-0 right-0 bg-base-100">
+        <ChatForm onSend={handleSend} />
       </div>
     </div>
   );

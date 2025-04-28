@@ -1,11 +1,11 @@
-import Content from "./content/Content.tsx";
+import MainPanel from "./MainPanel.tsx";
 
 const Sidebar = () => {
   return (
     <div className="drawer drawer-open">
       <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content flex flex-col items-center justify-center">
-        <Content />
+        <MainPanel />
       </div>
       <div className="drawer-side bg-base-200 overflow-auto">
         <div className="p-3">
