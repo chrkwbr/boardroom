@@ -1,13 +1,15 @@
 package chat
 
 import (
+	"backend/event"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"net/http"
 	"time"
 )
 
 type Chat struct {
-	ID      int       `json:"id"`
+	ID      string    `json:"id"`
 	Name    string    `json:"name"`
 	Image   string    `json:"image"`
 	Message string    `json:"message"`
@@ -16,7 +18,7 @@ type Chat struct {
 
 var initData = []Chat{}
 
-func RegisterRoutes(r *gin.Engine) {
+func RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:channelId/", getChats)
@@ -34,8 +36,11 @@ func postChat(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	newChat.ID = len(initData)
+	newChat.ID = uuid.New().String()
 	newChat.Date = time.Now()
 	initData = append(initData, newChat)
+
+	event.Publish("chat_created", newChat)
+
 	c.JSON(http.StatusOK, newChat)
 }

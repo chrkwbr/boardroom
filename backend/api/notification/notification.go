@@ -15,7 +15,7 @@ type Notification struct {
 
 var notifications = []Notification{}
 
-func RegisterRoutes(r *gin.Engine) {
+func RegisterRoutes(r *gin.RouterGroup) {
 	notificationGroup := r.Group("/notifications")
 	{
 		notificationGroup.GET("/", getNotifications)
@@ -23,5 +23,8 @@ func RegisterRoutes(r *gin.Engine) {
 }
 
 func getNotifications(c *gin.Context) {
-	c.JSON(http.StatusOK, notifications)
+	n := make([]Notification, len(notifications))
+	copy(n, notifications)
+	notifications = notifications[:0]
+	c.JSON(http.StatusOK, n)
 }

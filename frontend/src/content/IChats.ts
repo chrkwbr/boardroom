@@ -1,7 +1,7 @@
 import {ApiErrorResult, ApiSuccessResult, get, post} from "../fetch.ts";
 
 export interface IChat {
-  id: number;
+  id: string | null;
   name: string;
   image: string;
   message: string;
@@ -12,6 +12,18 @@ export const fetchChats: () => Promise<IChat[]> = async () => {
   const apiResult: ApiSuccessResult<IChat[]> | ApiErrorResult = await get<
     IChat[]
   >("chats/channel/");
+
+  if (apiResult.ok) {
+    return apiResult.data;
+  } else {
+    return [];
+  }
+};
+
+export const fetchDiffChats: () => Promise<IChat[]> = async () => {
+  const apiResult: ApiSuccessResult<IChat[]> | ApiErrorResult = await get<
+    IChat[]
+  >("chats/channel/diff/");
 
   if (apiResult.ok) {
     return apiResult.data;

@@ -1,29 +1,80 @@
 import ChatHistory from "./ChatHistory.tsx";
 import ChatForm from "./ChatForm.tsx";
 import {fetchChats, IChat, postChat} from "./IChats.ts";
-import {useCallback, useEffect, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 
 const Content = () => {
   const [data, setData] = useState<IChat[]>([]);
+  const socketRef = useRef<WebSocket>(null);
+  const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
     (async () => {
       const d: IChat[] = await fetchChats();
       setData(d);
     })();
+
+    if (socketRef.current) {
+      console.log("既存のWebSocket接続をクローズ中...");
+      socketRef.current.close();
+    }
+
+    console.log("WebSocket接続を開始します...");
+    const socket = new WebSocket("ws://localhost:8080/ws/chats/chnnelId1/");
+    socketRef.current = socket;
+
+    socket.addEventListener("open", () => {
+      console.log("WebSocket接続確立");
+      setSocketConnected(true);
+    });
+
+    socket.addEventListener("message", (event: MessageEvent) => {
+      console.log("メッセージを受信:", event.data);
+      try {
+        const eventData = JSON.parse(event.data);
+        if (eventData.Data && typeof eventData.Data === "object") {
+          const newChat = eventData.Data as IChat;
+          setData((prevData) => {
+            if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
+              console.log("skip duplicated", newChat.id);
+              return prevData;
+            }
+            return [...prevData, newChat];
+          });
+        }
+      } catch (error) {
+        console.error("メッセージの解析に失敗:", error);
+      }
+    });
+
+    socket.addEventListener("error", (event) => {
+      console.error("WebSocketエラー:", event);
+    });
+
+    socket.addEventListener("close", () => {
+      console.log("closed WebSocket");
+      setSocketConnected(false);
+    });
+
+    return () => {
+      if (
+        socketRef.current && socketRef.current.readyState === WebSocket.OPEN
+      ) {
+        socketRef.current.close();
+      }
+    };
   }, []);
 
   const handleSend = useCallback((chat: string) => {
     (async () => {
       const newChat: IChat = {
-        id: data.length,
+        id: null,
         name: "You",
         image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
         message: chat,
         date: new Date(),
       };
-      const newOne = await postChat(newChat);
-      newOne && setData((p: IChat[]) => [...p, newOne]);
+      await postChat(newChat);
     })();
   }, [data]);
 

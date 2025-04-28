@@ -3,7 +3,7 @@ export const get = async <T>(
   options?: RequestInit,
 ): Promise<ApiResult<T>> => {
   const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
-  const url: string = `${baseUrl}/${path}`;
+  const url: string = `${baseUrl}/api/${path}`;
   try {
     const response: Response = await fetch(url, options ? options : {});
     return handleResponse(response);
@@ -27,7 +27,7 @@ export const post = async <P, T>(
   options?: RequestInit,
 ): Promise<ApiResult<T>> => {
   const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
-  const url: string = `${baseUrl}/${path}`;
+  const url: string = `${baseUrl}/api/${path}`;
   try {
     const response: Response = await fetch(url, {
       method: "POST",
