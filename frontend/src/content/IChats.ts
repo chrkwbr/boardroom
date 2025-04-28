@@ -11,7 +11,7 @@ export interface IChat {
 export const fetchChats: () => Promise<IChat[]> = async () => {
   const apiResult: ApiSuccessResult<IChat[]> | ApiErrorResult = await get<
     IChat[]
-  >("channel/");
+  >("chats/channel/");
 
   if (apiResult.ok) {
     return apiResult.data;
@@ -24,10 +24,9 @@ export const postChat = async (chat: IChat) => {
   const apiResult: ApiSuccessResult<IChat> | ApiErrorResult = await post<
     IChat,
     IChat
-  >("channel/", chat);
+  >("chats/channel/", chat);
 
   if (apiResult.ok) {
-    console.log(`posted ${JSON.stringify(apiResult.data)} chat`);
     return apiResult.data;
   } else {
     alert(`Error: ${apiResult.data.message}`);

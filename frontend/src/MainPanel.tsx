@@ -1,4 +1,4 @@
-import Header from "./Header.tsx";
+import Header from "./header/Header.tsx";
 import Content from "./content/Content.tsx";
 
 const MainPanel = () => {
