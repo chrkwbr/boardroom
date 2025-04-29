@@ -29,19 +29,16 @@ const Content = () => {
     });
 
     socket.addEventListener("message", (event: MessageEvent) => {
-      console.log("メッセージを受信:", event.data);
       try {
         const eventData = JSON.parse(event.data);
-        if (eventData.Data && typeof eventData.Data === "object") {
-          const newChat = eventData.Data as IChat;
-          setData((prevData) => {
-            if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
-              console.log("skip duplicated", newChat.id);
-              return prevData;
-            }
-            return [...prevData, newChat];
-          });
-        }
+        const newChat = eventData as IChat;
+        setData((prevData) => {
+          if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
+            console.log("skip duplicated", newChat.id);
+            return prevData;
+          }
+          return [...prevData, newChat];
+        });
       } catch (error) {
         console.error("メッセージの解析に失敗:", error);
       }

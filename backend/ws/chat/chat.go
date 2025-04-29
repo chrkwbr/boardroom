@@ -16,10 +16,12 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func RegisterRoutes(r *gin.RouterGroup) {
+func RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
 	chatGroup := r.Group("/chats")
 	{
-		chatGroup.GET("/:channelId/", handleWebSocketChat)
+		chatGroup.GET("/:channelId/", func(c *gin.Context) {
+			handleWebSocketChat(c, hub)
+		})
 	}
 }
 
@@ -30,40 +32,33 @@ var activeSockets = struct {
 	connections: make(map[*websocket.Conn]bool),
 }
 
-func handleWebSocketChat(c *gin.Context) {
+func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Upgrade failed:", err)
 		return
 	}
-	defer conn.Close()
 
 	// 接続を追跡
 	activeSockets.mu.Lock()
 	activeSockets.connections[conn] = true
-	//log.Printf("WebSocket接続が確立されました。アクティブな接続数: %d", len(activeSockets.connections))
 	activeSockets.mu.Unlock()
 
-	defer func() {
+	client := event.NewClient(256)
+	hub.RegisterClient(client)
+
+	closeClient := func() {
 		activeSockets.mu.Lock()
 		delete(activeSockets.connections, conn)
-		//log.Printf("WebSocket接続が終了しました。アクティブな接続数: %d", len(activeSockets.connections))
 		activeSockets.mu.Unlock()
-	}()
 
-	conn.SetPingHandler(func(string) error {
-		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(time.Second))
-	})
-
-	eventCh := event.Subscribe("chat_created")
-	defer func() {
-		event.Unsubscribe("chat_created", eventCh)
-	}()
-
-	done := make(chan struct{})
+		hub.UnregisterClient(client)
+		conn.Close()
+	}
 
 	go func() {
-		defer close(done)
+		defer closeClient()
+
 		for {
 			// WebSocketからメッセージを読み取り続ける
 			// クライアントが切断すると、このループは終了する
@@ -77,21 +72,14 @@ func handleWebSocketChat(c *gin.Context) {
 		}
 	}()
 
-	for {
-		select {
-		case evt, ok := <-eventCh:
-			if !ok {
-				return
-			}
-			err := conn.WriteJSON(evt)
-			if err != nil {
-				log.Println("WebSocket write error:", err)
-				return
-			}
-		case <-done:
-			// クライアントが切断した
-			log.Println("WebSocket connection closed")
+	go client.Receive(func(msg interface{}) {
+		if err := conn.WriteJSON(msg); err != nil {
+			log.Println("WebSocket write error:", err)
 			return
 		}
-	}
+	})
+
+	conn.SetPingHandler(func(string) error {
+		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(time.Second))
+	})
 }

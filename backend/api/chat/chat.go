@@ -18,11 +18,13 @@ type Chat struct {
 
 var initData = []Chat{}
 
-func RegisterRoutes(r *gin.RouterGroup) {
+func RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:channelId/", getChats)
-		chatGroup.POST("/:channelId/", postChat)
+		chatGroup.POST("/:channelId/", func(c *gin.Context) {
+			postChat(c, hub)
+		})
 	}
 }
 
@@ -30,7 +32,7 @@ func getChats(c *gin.Context) {
 	c.JSON(http.StatusOK, initData)
 }
 
-func postChat(c *gin.Context) {
+func postChat(c *gin.Context, hub *event.Hub) {
 	var newChat Chat
 	if err := c.ShouldBindJSON(&newChat); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -40,7 +42,7 @@ func postChat(c *gin.Context) {
 	newChat.Date = time.Now()
 	initData = append(initData, newChat)
 
-	event.Publish("chat_created", newChat)
+	hub.BroadcastMessage(newChat)
 
 	c.JSON(http.StatusOK, newChat)
 }

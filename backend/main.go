@@ -3,6 +3,7 @@ package main
 import (
 	apichat "backend/api/chat"
 	apinotification "backend/api/notification"
+	"backend/event"
 	wschat "backend/ws/chat"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -10,6 +11,8 @@ import (
 
 func main() {
 	r := gin.New()
+	hub := event.NewHub()
+	go hub.Run()
 
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"}, // 許可するオリジン
@@ -19,11 +22,11 @@ func main() {
 	}))
 
 	api := r.Group("/api")
-	apichat.RegisterRoutes(api)
+	apichat.RegisterRoutes(api, hub)
 	apinotification.RegisterRoutes(api)
 
 	ws := r.Group("/ws")
-	wschat.RegisterRoutes(ws)
+	wschat.RegisterRoutes(ws, hub)
 
 	r.Run()
 }
