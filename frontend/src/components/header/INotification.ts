@@ -1,4 +1,4 @@
-import {ApiErrorResult, ApiSuccessResult, get} from "../fetch.ts";
+import {ApiErrorResult, ApiSuccessResult, get} from "../../fetch.ts";
 
 export interface INotification {
   id: number;

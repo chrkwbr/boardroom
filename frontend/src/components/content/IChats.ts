@@ -1,4 +1,4 @@
-import {ApiErrorResult, ApiSuccessResult, get, post} from "../fetch.ts";
+import {ApiErrorResult, ApiSuccessResult, get, post} from "../../fetch.ts";
 
 export interface IChat {
   id: string | null;

@@ -1,5 +1,5 @@
 import './App.css'
-import Sidebar from "./Sidebar.tsx"
+import Sidebar from "./components/Sidebar.tsx"
 
 const App = () => {
   return (
