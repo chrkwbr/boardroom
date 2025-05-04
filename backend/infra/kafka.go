@@ -30,7 +30,7 @@ func NewKafkaReader(brokers []string, topic string) event.EventSubscriber {
 			Brokers:  brokers,
 			Topic:    topic,
 			GroupID:  "chat-group",
-			MinBytes: 10e3, // 10KB
+			MinBytes: 1,    // ToDo: adjust as needed
 			MaxBytes: 10e6, // 10MB
 		}),
 	}

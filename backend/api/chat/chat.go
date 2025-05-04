@@ -57,7 +57,6 @@ func (p *MessageHandler) postChat(c *gin.Context, hub *event.Hub) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish"})
 		return
 	}
-	//hub.BroadcastMessage(newChat)
 
 	c.JSON(http.StatusOK, newChat)
 }

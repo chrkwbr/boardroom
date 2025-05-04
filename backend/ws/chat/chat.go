@@ -75,7 +75,6 @@ func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
 	}()
 
 	go client.Receive(func(msg []byte) {
-		// msg []byte を Chat に変換
 		chat := &chat.Chat{}
 		if err := json.Unmarshal(msg, chat); err != nil {
 			log.Println("Failed to unmarshal chat:", err)
