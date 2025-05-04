@@ -31,7 +31,7 @@ const Content = () => {
     socket.addEventListener("message", (event: MessageEvent) => {
       try {
         const eventData = JSON.parse(event.data);
-        const newChat = eventData as IChat;
+        const newChat = eventData satisfies IChat;
         setData((prevData) => {
           if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
             console.log("skip duplicated", newChat.id);

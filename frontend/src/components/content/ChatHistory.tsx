@@ -17,14 +17,12 @@ const ChatHistory = (props: { data: IChat[] }) => {
     <ul className="list rounded-box shadow-md">
       {props.data.map((chat: IChat) => {
         return (
-          <>
-            <li key={chat.id} className="list-row">
-              <Chat chat={chat} />
-            </li>
-            <div ref={endOfMessages}></div>
-          </>
+          <li key={chat.id} className="list-row">
+            <Chat chat={chat} />
+          </li>
         );
       })}
+      <div ref={endOfMessages}></div>
     </ul>
   );
 };

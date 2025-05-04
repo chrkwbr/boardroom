@@ -1,16 +1,16 @@
 package event
 
 type Client struct {
-	send chan interface{}
+	send chan []byte
 }
 
 func NewClient(bufferSIze int32) *Client {
 	return &Client{
-		send: make(chan interface{}, bufferSIze),
+		send: make(chan []byte, bufferSIze),
 	}
 }
 
-func (c *Client) Receive(f func(interface{})) {
+func (c *Client) Receive(f func([]byte)) {
 	for {
 		select {
 		case msg, ok := <-c.send:
@@ -24,7 +24,7 @@ func (c *Client) Receive(f func(interface{})) {
 
 type Hub struct {
 	clients    map[*Client]bool
-	broadcast  chan interface{}
+	broadcast  chan []byte
 	register   chan *Client
 	unregister chan *Client
 }
@@ -32,7 +32,7 @@ type Hub struct {
 func NewHub() *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
-		broadcast:  make(chan interface{}),
+		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
@@ -46,7 +46,7 @@ func (h *Hub) UnregisterClient(client *Client) {
 	h.unregister <- client
 }
 
-func (h *Hub) BroadcastMessage(message interface{}) {
+func (h *Hub) BroadcastMessage(message []byte) {
 	h.broadcast <- message
 }
 

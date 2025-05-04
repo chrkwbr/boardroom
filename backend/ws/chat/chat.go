@@ -1,7 +1,9 @@
 package chat
 
 import (
+	chat "backend/api/chat"
 	"backend/event"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"log"
@@ -72,8 +74,15 @@ func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
 		}
 	}()
 
-	go client.Receive(func(msg interface{}) {
-		if err := conn.WriteJSON(msg); err != nil {
+	go client.Receive(func(msg []byte) {
+		// msg []byte を Chat に変換
+		chat := &chat.Chat{}
+		if err := json.Unmarshal(msg, chat); err != nil {
+			log.Println("Failed to unmarshal chat:", err)
+			return
+		}
+
+		if err := conn.WriteJSON(chat); err != nil {
 			log.Println("WebSocket write error:", err)
 			return
 		}

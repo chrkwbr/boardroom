@@ -2,6 +2,7 @@ package chat
 
 import (
 	"backend/event"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"net/http"
@@ -16,14 +17,18 @@ type Chat struct {
 	Date    time.Time `json:"date"`
 }
 
+type MessageHandler struct {
+	Pub event.EventPublisher
+}
+
 var initData = []Chat{}
 
-func RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
+func (p *MessageHandler) RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:channelId/", getChats)
 		chatGroup.POST("/:channelId/", func(c *gin.Context) {
-			postChat(c, hub)
+			p.postChat(c, hub)
 		})
 	}
 }
@@ -32,7 +37,7 @@ func getChats(c *gin.Context) {
 	c.JSON(http.StatusOK, initData)
 }
 
-func postChat(c *gin.Context, hub *event.Hub) {
+func (p *MessageHandler) postChat(c *gin.Context, hub *event.Hub) {
 	var newChat Chat
 	if err := c.ShouldBindJSON(&newChat); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -40,9 +45,19 @@ func postChat(c *gin.Context, hub *event.Hub) {
 	}
 	newChat.ID = uuid.New().String()
 	newChat.Date = time.Now()
-	initData = append(initData, newChat)
 
-	hub.BroadcastMessage(newChat)
+	// newChat を byte 配列に変換
+	chatData, err := json.Marshal(newChat)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to marshal chat"})
+		return
+	}
+
+	if err := p.Pub.Publish("chat_messages", newChat.ID, chatData); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to publish"})
+		return
+	}
+	//hub.BroadcastMessage(newChat)
 
 	c.JSON(http.StatusOK, newChat)
 }
