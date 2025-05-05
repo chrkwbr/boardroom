@@ -3,6 +3,7 @@ package chat
 import (
 	chat "backend/api/chat"
 	"backend/event"
+	"backend/infra"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -18,7 +19,20 @@ var upgrader = websocket.Upgrader{
 	},
 }
 
-func RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
+func RegisterRoutes(r *gin.RouterGroup) {
+	hub := event.NewHub()
+	go hub.Run()
+
+	sub := infra.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
+	go func() {
+		if err := sub.Subscribe("_", func(key string, value []byte) error {
+			hub.BroadcastMessage(value)
+			return nil
+		}); err != nil {
+			panic(err)
+		}
+	}()
+
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:channelId/", func(c *gin.Context) {

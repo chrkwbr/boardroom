@@ -23,13 +23,11 @@ type MessageHandler struct {
 
 var initData = []Chat{}
 
-func (p *MessageHandler) RegisterRoutes(r *gin.RouterGroup, hub *event.Hub) {
+func (p *MessageHandler) RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:channelId/", getChats)
-		chatGroup.POST("/:channelId/", func(c *gin.Context) {
-			p.postChat(c, hub)
-		})
+		chatGroup.POST("/:channelId/", p.postChat)
 	}
 }
 
@@ -37,7 +35,7 @@ func getChats(c *gin.Context) {
 	c.JSON(http.StatusOK, initData)
 }
 
-func (p *MessageHandler) postChat(c *gin.Context, hub *event.Hub) {
+func (p *MessageHandler) postChat(c *gin.Context) {
 	var newChat Chat
 	if err := c.ShouldBindJSON(&newChat); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
