@@ -1,4 +1,4 @@
-package event
+package pubsub
 
 type EventPublisher interface {
 	Publish(topic string, key string, value []byte) error

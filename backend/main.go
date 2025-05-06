@@ -1,12 +1,15 @@
 package main
 
 import (
-	apichat "backend/api/chat"
-	apinotification "backend/api/notification"
-	"backend/infra"
-	wschat "backend/ws/chat"
+	apichat "backend/chat/api"
+	"backend/chat/repository/persistence"
+	"backend/chat/usecase"
+	wschat "backend/chat/ws"
+	tx "backend/infra/db"
+	"database/sql"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 func main() {
@@ -19,13 +22,28 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	api := r.Group("/api")
+	func() {
+		//pub := kafka.NewKafkaWriter([]string{"localhost:9092"})
+		db, err := sql.Open("postgres", "host=localhost port=5432 user=boardroom password=boardroom dbname=boardroom search_path=chat sslmode=disable")
+		if err != nil {
+			panic(err)
+		}
+		controller := apichat.NewChatController(
+			usecase.NewChatUseCase(
+				persistence.NewChatRepositoryImpl(),
+				persistence.NewChatOutboxRepositoryImpl(),
+				tx.NewTransactionManager(db),
+			),
+		)
 
-	pub := infra.NewKafkaWriter([]string{"localhost:9092"})
-	h := &apichat.MessageHandler{Pub: pub}
-	h.RegisterRoutes(api)
+		api := r.Group("/api")
+		controller.RegisterRoutes(api)
+		//
+		//h := &apichat.MessageHandler{Pub: pub}
+		//h.RegisterRoutes(api)
+	}()
 
-	apinotification.RegisterRoutes(api)
+	//apinotification.RegisterRoutes(api)
 
 	ws := r.Group("/ws")
 	wschat.RegisterRoutes(ws)

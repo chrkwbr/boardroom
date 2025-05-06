@@ -9,10 +9,10 @@ const Notifications = () => {
   }, []);
 
   const polling = () => {
-    setInterval(async () => {
-      const newOne = await getNotifications();
-      setNotifications((prev) => [...prev, ...newOne]);
-    }, 5000);
+    // setInterval(async () => {
+    //   const newOne = await getNotifications();
+    //   setNotifications((prev) => [...prev, ...newOne]);
+    // }, 5000);
   };
 
   return (

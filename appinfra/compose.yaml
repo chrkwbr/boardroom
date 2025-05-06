@@ -21,3 +21,14 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     depends_on:
       - zookeeper
+
+  postgres:
+    build:
+      context: ./postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./postgres/postgres.env
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d

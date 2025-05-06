@@ -1,7 +1,7 @@
-package infra
+package kafka
 
 import (
-	"backend/event"
+	"backend/infra/pubsub"
 	"context"
 	"github.com/segmentio/kafka-go"
 )
@@ -14,7 +14,7 @@ type KafkaReader struct {
 	reader *kafka.Reader
 }
 
-func NewKafkaWriter(brokers []string) event.EventPublisher {
+func NewKafkaWriter(brokers []string) pubsub.EventPublisher {
 	return &KafkaWriter{
 		writer: &kafka.Writer{
 			Addr:     kafka.TCP(brokers...),
@@ -24,7 +24,7 @@ func NewKafkaWriter(brokers []string) event.EventPublisher {
 	}
 }
 
-func NewKafkaReader(brokers []string, topic string) event.EventSubscriber {
+func NewKafkaReader(brokers []string, topic string) pubsub.EventSubscriber {
 	return &KafkaReader{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  brokers,

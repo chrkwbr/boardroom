@@ -1,9 +1,9 @@
-package chat
+package ws
 
 import (
-	chat "backend/api/chat"
-	"backend/event"
-	"backend/infra"
+	"backend/chat/domain"
+	"backend/infra/kafka"
+	"backend/infra/pubsub"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -20,10 +20,10 @@ var upgrader = websocket.Upgrader{
 }
 
 func RegisterRoutes(r *gin.RouterGroup) {
-	hub := event.NewHub()
+	hub := pubsub.NewHub()
 	go hub.Run()
 
-	sub := infra.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
+	sub := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
 	go func() {
 		if err := sub.Subscribe("_", func(key string, value []byte) error {
 			hub.BroadcastMessage(value)
@@ -48,7 +48,7 @@ var activeSockets = struct {
 	connections: make(map[*websocket.Conn]bool),
 }
 
-func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
+func handleWebSocketChat(c *gin.Context, hub *pubsub.Hub) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Upgrade failed:", err)
@@ -60,7 +60,7 @@ func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
 	activeSockets.connections[conn] = true
 	activeSockets.mu.Unlock()
 
-	client := event.NewClient(256)
+	client := pubsub.NewClient(256)
 	hub.RegisterClient(client)
 
 	closeClient := func() {
@@ -89,7 +89,7 @@ func handleWebSocketChat(c *gin.Context, hub *event.Hub) {
 	}()
 
 	go client.Receive(func(msg []byte) {
-		chat := &chat.Chat{}
+		chat := domain.Chat{}
 		if err := json.Unmarshal(msg, chat); err != nil {
 			log.Println("Failed to unmarshal chat:", err)
 			return
