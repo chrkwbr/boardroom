@@ -3,7 +3,9 @@ package usecase
 import (
 	domain2 "backend/chat/domain"
 	"backend/infra/db"
+	"backend/infra/hub"
 	"database/sql"
+	"encoding/json"
 	"github.com/google/uuid"
 	"time"
 )
@@ -12,17 +14,20 @@ type ChatUseCase struct {
 	chatRepository       domain2.ChatRepository
 	chatOutboxRepository domain2.ChatOutboxRepository
 	txManager            db.Transaction
+	hub                  *hub.Hub
 }
 
 func NewChatUseCase(
 	chatRepository domain2.ChatRepository,
 	chatOutboxRepository domain2.ChatOutboxRepository,
 	txManager db.Transaction,
+	hub *hub.Hub,
 ) *ChatUseCase {
 	return &ChatUseCase{
 		chatRepository:       chatRepository,
 		chatOutboxRepository: chatOutboxRepository,
 		txManager:            txManager,
+		hub:                  hub,
 	}
 }
 
@@ -35,8 +40,8 @@ func (uc *ChatUseCase) CreateChat(sender string, room string, message string) er
 		Timestamp: time.Now().Unix(),
 	}
 
-	return uc.txManager.RunWithTx(func(tx *sql.Tx) error {
-		event := chat.AsCreateEvent()
+	event := chat.AsCreateEvent()
+	if err := uc.txManager.RunWithTx(func(tx *sql.Tx) error {
 		eventId, err := uc.chatRepository.Save(&event, tx)
 		if err != nil {
 			return err
@@ -47,5 +52,11 @@ func (uc *ChatUseCase) CreateChat(sender string, room string, message string) er
 			return err
 		}
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+
+	marshal, _ := json.Marshal(&event)
+	uc.hub.BroadcastMessage(marshal)
+	return nil
 }

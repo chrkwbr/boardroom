@@ -2,7 +2,7 @@ package ws
 
 import (
 	"backend/chat/domain"
-	"backend/infra/hub"
+	hub2 "backend/infra/hub"
 	"backend/infra/pubsub/kafka"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -20,7 +20,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func RegisterRoutes(r *gin.RouterGroup) {
-	hub := hub.NewHub()
+	hub := hub2.NewHub()
 	go hub.Run()
 
 	sub := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
@@ -48,7 +48,7 @@ var activeSockets = struct {
 	connections: make(map[*websocket.Conn]bool),
 }
 
-func handleWebSocketChat(c *gin.Context, h *hub.Hub) {
+func handleWebSocketChat(c *gin.Context, h *hub2.Hub) {
 	conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
 		log.Println("Upgrade failed:", err)
@@ -60,7 +60,7 @@ func handleWebSocketChat(c *gin.Context, h *hub.Hub) {
 	activeSockets.connections[conn] = true
 	activeSockets.mu.Unlock()
 
-	client := hub.NewClient(256)
+	client := hub2.NewClient(256)
 	h.RegisterClient(client)
 
 	closeClient := func() {
