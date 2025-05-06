@@ -20,3 +20,33 @@ func (impl *ChatOutboxRepositoryImpl) Save(event *domain.ChatEventOutbox, tx *sq
 	}
 	return id, nil
 }
+
+func (impl *ChatOutboxRepositoryImpl) FetchUnprocessed(limit int, tx *sql.Tx) ([]*domain.ChatEventOutbox, error) {
+	query := "SELECT id, event_id, payload, created_at FROM chat_outbox LIMIT $1 FOR UPDATE SKIP LOCKED"
+	rows, err := tx.Query(query, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var outboxes []*domain.ChatEventOutbox
+	for rows.Next() {
+		var id int64
+		var outbox domain.ChatEventOutbox
+		if err := rows.Scan(&id, &outbox.EventId, &outbox.Payload, &outbox.Timestamp); err != nil {
+			return nil, err
+		}
+		outboxes = append(outboxes, &outbox)
+	}
+
+	return outboxes, nil
+}
+
+func (impl *ChatOutboxRepositoryImpl) Delete(entity *domain.ChatEventOutbox, tx *sql.Tx) error {
+	deleteQuery := "DELETE FROM chat_outbox WHERE event_id = $1"
+	_, err := tx.Exec(deleteQuery, entity.EventId)
+	if err != nil {
+		return err
+	}
+	return nil
+}

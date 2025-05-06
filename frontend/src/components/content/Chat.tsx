@@ -5,7 +5,7 @@ const Chat = (props: { chat: IChat }) => {
     <>
       <div><img className="size-10 rounded-box" src={props.chat.image}/></div>
       <div>
-        <div>{props.chat.name}</div>
+        <div>{props.chat.sender}</div>
         <div className="text-xs uppercase font-semibold opacity-60">{props.chat.date.toString()}</div>
       </div>
       <p className="list-col-wrap text-xs">

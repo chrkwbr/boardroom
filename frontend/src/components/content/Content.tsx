@@ -1,6 +1,6 @@
 import ChatHistory from "./ChatHistory.tsx";
 import ChatForm from "./ChatForm.tsx";
-import {fetchChats, IChat, postChat} from "./IChats.ts";
+import {ChatEvent, fetchChats, IChat, IPostChat, postChat} from "./IChats.ts";
 import {useCallback, useEffect, useRef, useState} from "react";
 
 const Content = () => {
@@ -31,7 +31,14 @@ const Content = () => {
     socket.addEventListener("message", (event: MessageEvent) => {
       try {
         const eventData = JSON.parse(event.data);
-        const newChat = eventData satisfies IChat;
+        const chatEvent = eventData satisfies ChatEvent;
+        const newChat: IChat = {
+          id: chatEvent.ID,
+          sender: chatEvent.Sender,
+          image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+          message: chatEvent.Message,
+          date: new Date(chatEvent.Timestamp * 1000),
+        }
         setData((prevData) => {
           if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
             console.log("skip duplicated", newChat.id);
@@ -64,12 +71,10 @@ const Content = () => {
 
   const handleSend = useCallback((chat: string) => {
     (async () => {
-      const newChat: IChat = {
+      const newChat: IPostChat = {
         id: null,
-        name: "You",
-        image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+        sender: "You",
         message: chat,
-        date: new Date(),
       };
       await postChat(newChat);
     })();

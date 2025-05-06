@@ -1,4 +1,4 @@
-package pubsub
+package hub
 
 type Client struct {
 	send chan []byte
