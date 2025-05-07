@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -32,3 +30,10 @@ services:
       - ./postgres/postgres.env
     volumes:
       - ./postgres/init:/docker-entrypoint-initdb.d
+
+  redis:
+    build:
+      context: ./redis
+    restart: always
+    ports:
+      - "6379:6379"

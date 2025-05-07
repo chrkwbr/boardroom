@@ -11,6 +11,10 @@ const Content = () => {
   useEffect(() => {
     (async () => {
       const d: IChat[] = await fetchChats();
+      Array.from(d).map(it => {
+        it.date = new Date(it.date * 1000);
+        return it;
+      })
       setData(d);
     })();
 

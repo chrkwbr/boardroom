@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	domain2 "backend/chat/domain"
+	"backend/chat/command/domain"
 	"backend/infra/db"
 	"backend/infra/hub"
 	"database/sql"
@@ -11,15 +11,15 @@ import (
 )
 
 type ChatUseCase struct {
-	chatRepository       domain2.ChatRepository
-	chatOutboxRepository domain2.ChatOutboxRepository
+	chatRepository       domain.ChatRepository
+	chatOutboxRepository domain.ChatOutboxRepository
 	txManager            db.Transaction
 	hub                  *hub.Hub
 }
 
 func NewChatUseCase(
-	chatRepository domain2.ChatRepository,
-	chatOutboxRepository domain2.ChatOutboxRepository,
+	chatRepository domain.ChatRepository,
+	chatOutboxRepository domain.ChatOutboxRepository,
 	txManager db.Transaction,
 	hub *hub.Hub,
 ) *ChatUseCase {
@@ -32,7 +32,7 @@ func NewChatUseCase(
 }
 
 func (uc *ChatUseCase) CreateChat(sender string, room string, message string) error {
-	chat := &domain2.Chat{
+	chat := &domain.Chat{
 		ID:        uuid.New(),
 		Sender:    sender,
 		Room:      room,

@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"backend/chat/domain"
+	"backend/chat/command/domain"
 	"backend/infra/hub"
 	"backend/infra/pubsub"
 	"context"

@@ -1,18 +1,18 @@
 package api
 
 import (
-	"backend/chat/usecase"
+	"backend/chat/command/usecase"
 	"github.com/gin-gonic/gin"
 	"log"
 	"net/http"
 )
 
-type ChatController struct {
+type ChatCommandController struct {
 	chatUseCase *usecase.ChatUseCase
 }
 
-func NewChatController(chatUseCase *usecase.ChatUseCase) *ChatController {
-	return &ChatController{
+func NewChatCommandController(chatUseCase *usecase.ChatUseCase) *ChatCommandController {
+	return &ChatCommandController{
 		chatUseCase: chatUseCase,
 	}
 }
@@ -23,17 +23,14 @@ type ChatRequest struct {
 	Message string `json:"message"`
 }
 
-func (con *ChatController) RegisterRoutes(r *gin.RouterGroup) {
+func (con *ChatCommandController) RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
-		chatGroup.GET("/:channelId/", func(c *gin.Context) {
-			c.JSON(http.StatusOK, []ChatRequest{})
-		})
 		chatGroup.POST("/:channelId/", con.postChat)
 	}
 }
 
-func (con *ChatController) postChat(c *gin.Context) {
+func (con *ChatCommandController) postChat(c *gin.Context) {
 	var newChat ChatRequest
 	if err := c.ShouldBindJSON(&newChat); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

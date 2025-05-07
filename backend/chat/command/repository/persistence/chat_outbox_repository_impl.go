@@ -1,7 +1,7 @@
 package persistence
 
 import (
-	"backend/chat/domain"
+	"backend/chat/command/domain"
 	"database/sql"
 )
 
