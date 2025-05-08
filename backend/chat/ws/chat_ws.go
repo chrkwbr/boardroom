@@ -2,7 +2,7 @@ package ws
 
 import (
 	"backend/chat/command/domain"
-	hub2 "backend/infra/hub"
+	"backend/infra/hub"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -13,13 +13,10 @@ import (
 )
 
 type ChatWebSocket struct {
-	hub *hub2.Hub
 }
 
-func NewChatWebSocket(hub *hub2.Hub) *ChatWebSocket {
-	return &ChatWebSocket{
-		hub: hub,
-	}
+func NewChatWebSocket() *ChatWebSocket {
+	return &ChatWebSocket{}
 }
 
 var upgrader = websocket.Upgrader{
@@ -56,16 +53,26 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	activeSockets.connections[conn] = true
 	activeSockets.mu.Unlock()
 
-	client := hub2.NewClient(256)
-	ws.hub.RegisterClient(client)
+	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
+	if err != nil {
+		log.Println("Failed to get hub:", err)
+		err := conn.Close()
+		if err != nil {
+			return
+		}
+	}
+	client := kafkaHub.CreateAndRegisterClient(256)
 
 	closeClient := func() {
 		activeSockets.mu.Lock()
 		delete(activeSockets.connections, conn)
 		activeSockets.mu.Unlock()
 
-		ws.hub.UnregisterClient(client)
-		conn.Close()
+		kafkaHub.UnregisterClient(client)
+		err := conn.Close()
+		if err != nil {
+			return
+		}
 	}
 
 	go func() {

@@ -12,7 +12,6 @@ import (
 	tx "backend/infra/db"
 	"backend/infra/hub"
 	"backend/infra/pubsub/kafka"
-	"context"
 	"database/sql"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -77,11 +76,9 @@ func main() {
 	}()
 
 	ws := r.Group("/ws")
-	chatWs := wschat.NewChatWebSocket(chat_event_kafka)
+	chatWs := wschat.NewChatWebSocket()
 	chatWs.RegisterRoutes(ws)
-
-	rp := processor.NewRedisProcessor(chat_event_kafka, RedisClient)
-	rp.Process(context.Background())
+	rp := processor.NewRedisProcessor(RedisClient)
 
 	defer func() {
 		if err := ChatDB.Close(); err != nil {

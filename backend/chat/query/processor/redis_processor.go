@@ -16,30 +16,37 @@ type RedisProcessor struct {
 	redisClient *redis.Client
 }
 
-func NewRedisProcessor(h *hub.Hub, rdb *redis.Client) *RedisProcessor {
-	return &RedisProcessor{
-		hub:         h,
-		hubClient:   hub.NewClient(10),
+func NewRedisProcessor(rdb *redis.Client) *RedisProcessor {
+	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
+	if err != nil {
+		log.Panicln("Failed to get hub:", err)
+	}
+	client := kafkaHub.CreateAndRegisterClient(10)
+	p := &RedisProcessor{
+		hub:         kafkaHub,
+		hubClient:   client,
 		redisClient: rdb,
 	}
+
+	go client.Receive(func(bytes []byte) {
+		p.Process(bytes, context.Background())
+	})
+	return p
 }
 
-func (p *RedisProcessor) Process(ctx context.Context) {
-	p.hub.RegisterClient(p.hubClient)
-	go p.hubClient.Receive(func(msg []byte) {
-		chat := &domain.Chat{}
-		if err := json.Unmarshal(msg, chat); err != nil {
-			log.Println("Failed to unmarshal chat:", err)
-			return
-		}
-		key := fmt.Sprintf("chat:room:%s", chat.Room)
-		// ToDo check if the key exists
-		err := p.redisClient.RPush(ctx, key, msg).Err()
-		if err != nil {
-			log.Println("Error publishing to Redis:", err)
-			return
-		}
-	})
+func (p *RedisProcessor) Process(msg []byte, ctx context.Context) {
+	chat := &domain.Chat{}
+	if err := json.Unmarshal(msg, chat); err != nil {
+		log.Println("Failed to unmarshal chat:", err)
+		return
+	}
+	key := fmt.Sprintf("chat:room:%s", chat.Room)
+	// ToDo check if the key exists
+	err := p.redisClient.RPush(ctx, key, msg).Err()
+	if err != nil {
+		log.Println("Error publishing to Redis:", err)
+		return
+	}
 }
 
 func (p *RedisProcessor) Close() {

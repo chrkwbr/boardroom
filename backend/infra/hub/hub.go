@@ -40,11 +40,11 @@ func newHub() *Hub {
 
 func (h *Hub) CreateAndRegisterClient(bufferSIze int32) *Client {
 	client := NewClient(bufferSIze)
-	h.RegisterClient(client)
+	h.registerClient(client)
 	return client
 }
 
-func (h *Hub) RegisterClient(client *Client) {
+func (h *Hub) registerClient(client *Client) {
 	h.register <- client
 }
 
