@@ -17,7 +17,7 @@ type RedisProcessor struct {
 }
 
 func NewRedisProcessor(rdb *redis.Client) *RedisProcessor {
-	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
+	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafkaWs)
 	if err != nil {
 		log.Panicln("Failed to get hub:", err)
 	}

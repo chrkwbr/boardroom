@@ -53,7 +53,7 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	activeSockets.connections[conn] = true
 	activeSockets.mu.Unlock()
 
-	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
+	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafkaWs)
 	if err != nil {
 		log.Println("Failed to get hub:", err)
 		err := conn.Close()

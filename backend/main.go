@@ -5,12 +5,12 @@ import (
 	processor2 "backend/chat/command/processor"
 	persistence2 "backend/chat/command/repository/persistence"
 	"backend/chat/command/usecase"
+	processor3 "backend/chat/processor"
 	chatqueryApi "backend/chat/query/api"
 	"backend/chat/query/processor"
 	"backend/chat/query/service"
 	wschat "backend/chat/ws"
 	tx "backend/infra/db"
-	"backend/infra/hub"
 	"backend/infra/pubsub/kafka"
 	"database/sql"
 	"github.com/gin-contrib/cors"
@@ -61,20 +61,7 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	chat_event_kafka, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
-	if err != nil {
-		log.Panicln("Failed to get hub:", err)
-	}
-	sub := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
-	go func() {
-		if err := sub.Subscribe("_", func(key string, value []byte) error {
-			chat_event_kafka.BroadcastMessage(value)
-			return nil
-		}); err != nil {
-			panic(err)
-		}
-	}()
-
+	processor3.NewKafkaWsProcessor().Start()
 	ws := r.Group("/ws")
 	chatWs := wschat.NewChatWebSocket()
 	chatWs.RegisterRoutes(ws)
