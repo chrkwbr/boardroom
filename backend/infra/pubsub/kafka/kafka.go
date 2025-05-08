@@ -56,3 +56,11 @@ func (k KafkaReader) Subscribe(topic string, handler func(key string, value []by
 		}
 	}
 }
+
+func (k KafkaWriter) Close() error {
+	return k.writer.Close()
+}
+
+func (k KafkaReader) Close() error {
+	return k.reader.Close()
+}

@@ -3,7 +3,6 @@ package processor
 import (
 	"backend/chat/command/domain"
 	"backend/infra/pubsub"
-	"backend/infra/pubsub/kafka"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -11,31 +10,31 @@ import (
 	"log"
 )
 
-type KafkaRedisProcessor struct {
+type RedisConstructor struct {
 	subscriber  pubsub.EventSubscriber
 	redisClient *redis.Client
 }
 
-func NewRedisProcessor(rdb *redis.Client) *KafkaRedisProcessor {
-	return &KafkaRedisProcessor{
-		subscriber:  kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "redis_constructor"),
+func NewRedisConstructor(sub pubsub.EventSubscriber, rdb *redis.Client) *RedisConstructor {
+	return &RedisConstructor{
+		subscriber:  sub,
 		redisClient: rdb,
 	}
 }
 
-func (p *KafkaRedisProcessor) Start() {
+func (p *RedisConstructor) Start() {
 	go func() {
 		if err := p.subscriber.Subscribe("_", func(key string, value []byte) error {
 			p.process(value, context.Background())
 			return nil
 		}); err != nil {
-			log.Panicln("Failed to subscribe to Kafka:", err)
+			log.Panicln("Failed to subscribe to event:", err)
 		}
-		log.Println("Kafka subscriber started")
+		log.Println("Event subscriber started")
 	}()
 }
 
-func (p *KafkaRedisProcessor) process(msg []byte, ctx context.Context) {
+func (p *RedisConstructor) process(msg []byte, ctx context.Context) {
 	chat := &domain.Chat{}
 	if err := json.Unmarshal(msg, chat); err != nil {
 		log.Println("Failed to unmarshal chat:", err)

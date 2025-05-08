@@ -53,7 +53,7 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	activeSockets.connections[conn] = true
 	activeSockets.mu.Unlock()
 
-	kafkaHub, err := hub.GetHubFactory().GetHub(hub.ChatEventKafkaWs)
+	wsChatEventPusherHub, err := hub.GetHubFactory().GetHub(hub.ChatEventWsPusher)
 	if err != nil {
 		log.Println("Failed to get hub:", err)
 		err := conn.Close()
@@ -61,14 +61,14 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 			return
 		}
 	}
-	client := kafkaHub.CreateAndRegisterClient(256)
+	client := wsChatEventPusherHub.CreateAndRegisterClient(256)
 
 	closeClient := func() {
 		activeSockets.mu.Lock()
 		delete(activeSockets.connections, conn)
 		activeSockets.mu.Unlock()
 
-		kafkaHub.UnregisterClient(client)
+		wsChatEventPusherHub.UnregisterClient(client)
 		err := conn.Close()
 		if err != nil {
 			return

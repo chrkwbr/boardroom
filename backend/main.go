@@ -37,11 +37,11 @@ func main() {
 	}))
 
 	// == Chat API ==
-	pub := kafka.NewKafkaWriter([]string{"localhost:9092"})
+	eventPublisher := kafka.NewKafkaWriter([]string{"localhost:9092"})
 	chatOutboxProcessor := processor2.NewOutboxProcessor(
 		ChatDB,
 		persistence2.NewChatOutboxRepositoryImpl(),
-		pub)
+		eventPublisher)
 
 	chatCommandApi := chatCommandApi.NewChatCommandController(
 		usecase.NewChatUseCase(
@@ -61,11 +61,15 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	processor.NewKafkaWsProcessor().Start()
+	subscriber_websocket_processor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "websocket_processor")
+	processor.NewWsChatEventPusher(subscriber_websocket_processor).Start()
+
 	ws := r.Group("/ws")
 	chatWs := wschat.NewChatWebSocket()
 	chatWs.RegisterRoutes(ws)
-	processor3.NewRedisProcessor(RedisClient).Start()
+
+	subscriber_redis_constructor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "redis_constructor")
+	processor3.NewRedisConstructor(subscriber_redis_constructor, RedisClient).Start()
 
 	defer func() {
 		if err := ChatDB.Close(); err != nil {
@@ -77,6 +81,9 @@ func main() {
 			log.Println("Error closing Redis client:", err)
 		}
 
+		eventPublisher.Close()
+		subscriber_websocket_processor.Close()
+		subscriber_redis_constructor.Close()
 	}()
 
 	r.Run()

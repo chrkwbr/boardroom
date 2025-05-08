@@ -8,8 +8,8 @@ import (
 type hubKey string
 
 const (
-	ChatEventOutbox  hubKey = "chat_event_outbox"
-	ChatEventKafkaWs hubKey = "chat_event_kafka_ws"
+	ChatEventOutbox   hubKey = "chat_event_outbox"
+	ChatEventWsPusher hubKey = "chat_event_ws_pusher"
 )
 
 type HubFactory struct {
