@@ -39,20 +39,16 @@ func main() {
 
 	// == Chat API ==
 	pub := kafka.NewKafkaWriter([]string{"localhost:9092"})
-	chatOutboxHub := hub.NewHub()
-	go chatOutboxHub.Run()
 	chatOutboxProcessor := processor2.NewOutboxProcessor(
 		ChatDB,
 		persistence2.NewChatOutboxRepositoryImpl(),
-		pub,
-		chatOutboxHub)
+		pub)
 
 	chatCommandApi := chatCommandApi.NewChatCommandController(
 		usecase.NewChatUseCase(
 			persistence2.NewChatRepositoryImpl(),
 			persistence2.NewChatOutboxRepositoryImpl(),
 			tx.NewTransactionManager(ChatDB),
-			chatOutboxHub,
 		),
 	)
 	chatQueryApi := chatqueryApi.NewChatQueryController(
@@ -66,12 +62,14 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	hub := hub.NewHub()
-	go hub.Run()
+	chat_event_kafka, err := hub.GetHubFactory().GetHub(hub.ChatEventKafka)
+	if err != nil {
+		log.Panicln("Failed to get hub:", err)
+	}
 	sub := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
 	go func() {
 		if err := sub.Subscribe("_", func(key string, value []byte) error {
-			hub.BroadcastMessage(value)
+			chat_event_kafka.BroadcastMessage(value)
 			return nil
 		}); err != nil {
 			panic(err)
@@ -79,10 +77,10 @@ func main() {
 	}()
 
 	ws := r.Group("/ws")
-	chatWs := wschat.NewChatWebSocket(hub)
+	chatWs := wschat.NewChatWebSocket(chat_event_kafka)
 	chatWs.RegisterRoutes(ws)
 
-	rp := processor.NewRedisProcessor(hub, RedisClient)
+	rp := processor.NewRedisProcessor(chat_event_kafka, RedisClient)
 	rp.Process(context.Background())
 
 	defer func() {

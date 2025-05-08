@@ -26,45 +26,46 @@ func NewOutboxProcessor(
 	db *sql.DB,
 	chatOutboxRepository domain.ChatOutboxRepository,
 	publisher pubsub.EventPublisher,
-	h *hub.Hub,
 ) *OutboxProcessor {
+	h, err := hub.GetHubFactory().GetHub(hub.ChatEventOutbox)
+	if err != nil {
+		log.Panicln("Failed to get hub:", err)
+	}
+
 	processor := &OutboxProcessor{
 		db:                   db,
 		chatOutboxRepository: chatOutboxRepository,
 		publisher:            publisher,
 		hub:                  h,
-		client:               hub.NewClient(10),
+		client:               h.CreateAndRegisterClient(10),
 	}
-	processor.init()
+	go processor.client.Receive(processor.OutboxReceiver)
 	return processor
 }
 
-func (p *OutboxProcessor) init() {
-	p.hub.RegisterClient(p.client)
-	go p.client.Receive(func(msg []byte) {
-		p.mu.Lock()
-		if p.processing {
-			log.Println("Already processing outbox, skipping...")
-			p.mu.Unlock()
-			return
-		}
-		p.processing = true
+func (p *OutboxProcessor) OutboxReceiver(msg []byte) {
+	p.mu.Lock()
+	if p.processing {
+		log.Println("Already processing outbox, skipping...")
 		p.mu.Unlock()
+		return
+	}
+	p.processing = true
+	p.mu.Unlock()
 
-		defer func() {
-			p.mu.Lock()
-			p.processing = false
-			p.mu.Unlock()
-		}()
+	defer func() {
+		p.mu.Lock()
+		p.processing = false
+		p.mu.Unlock()
+	}()
 
-		ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
-		defer cancelFunc()
+	ctx, cancelFunc := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancelFunc()
 
-		if err := p.processOutbox(ctx); err != nil {
-			log.Println("Error processing outbox:", err)
-			return
-		}
-	})
+	if err := p.processOutbox(ctx); err != nil {
+		log.Println("Error processing outbox:", err)
+		return
+	}
 }
 
 func (p *OutboxProcessor) Close() {

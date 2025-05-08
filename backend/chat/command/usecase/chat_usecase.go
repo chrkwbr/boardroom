@@ -14,20 +14,17 @@ type ChatUseCase struct {
 	chatRepository       domain.ChatRepository
 	chatOutboxRepository domain.ChatOutboxRepository
 	txManager            db.Transaction
-	hub                  *hub.Hub
 }
 
 func NewChatUseCase(
 	chatRepository domain.ChatRepository,
 	chatOutboxRepository domain.ChatOutboxRepository,
 	txManager db.Transaction,
-	hub *hub.Hub,
 ) *ChatUseCase {
 	return &ChatUseCase{
 		chatRepository:       chatRepository,
 		chatOutboxRepository: chatOutboxRepository,
 		txManager:            txManager,
-		hub:                  hub,
 	}
 }
 
@@ -57,6 +54,12 @@ func (uc *ChatUseCase) CreateChat(sender string, room string, message string) er
 	}
 
 	marshal, _ := json.Marshal(&event)
-	uc.hub.BroadcastMessage(marshal)
+
+	outboxHub, err := hub.GetHubFactory().GetHub(hub.ChatEventOutbox)
+	if err != nil {
+		return err
+	}
+	outboxHub.BroadcastMessage(marshal)
+
 	return nil
 }

@@ -29,13 +29,19 @@ type Hub struct {
 	unregister chan *Client
 }
 
-func NewHub() *Hub {
+func newHub() *Hub {
 	return &Hub{
 		clients:    make(map[*Client]bool),
 		broadcast:  make(chan []byte),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
 	}
+}
+
+func (h *Hub) CreateAndRegisterClient(bufferSIze int32) *Client {
+	client := NewClient(bufferSIze)
+	h.RegisterClient(client)
+	return client
 }
 
 func (h *Hub) RegisterClient(client *Client) {
