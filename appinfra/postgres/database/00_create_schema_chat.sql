@@ -1,3 +1,4 @@
+-- should be executed by boardroom
 create schema chat;
 
 set search_path to chat;
@@ -14,6 +15,7 @@ CREATE TABLE IF NOT EXISTS chat_events (
 CREATE TABLE IF NOT EXISTS chat_outbox (
     id SERIAL PRIMARY KEY,
     event_id BIGINT NOT NULL UNIQUE,
+    event_type VARCHAR(50) NOT NULL,
     payload JSONB NOT NULL,
     processed BOOLEAN DEFAULT false,
     created_at BIGINT NOT NULL

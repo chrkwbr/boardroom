@@ -11,6 +11,7 @@ const Content = () => {
   useEffect(() => {
     (async () => {
       const d: IChat[] = await fetchChats();
+      if (!d) return;
       Array.from(d).map(it => {
         it.date = new Date(it.date * 1000);
         return it;

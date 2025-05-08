@@ -23,6 +23,7 @@ type ChatEvent struct {
 
 type ChatEventOutbox struct {
 	EventId   int64
+	EventType string
 	Payload   []byte
 	Timestamp int64
 }
@@ -44,6 +45,7 @@ func (c *Chat) AsCreateEvent() ChatEvent {
 func (e *ChatEvent) AsOutbox(eventId int64) ChatEventOutbox {
 	return ChatEventOutbox{
 		EventId:   eventId,
+		EventType: e.EventType,
 		Payload:   e.Payload,
 		Timestamp: e.Timestamp,
 	}
