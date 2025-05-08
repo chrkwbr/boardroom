@@ -2,15 +2,19 @@ package processor
 
 import (
 	"backend/infra/hub"
+	"backend/infra/pubsub"
 	"backend/infra/pubsub/kafka"
 	"log"
 )
 
 type KafkaWsProcessor struct {
+	subscriber pubsub.EventSubscriber
 }
 
 func NewKafkaWsProcessor() *KafkaWsProcessor {
-	return &KafkaWsProcessor{}
+	return &KafkaWsProcessor{
+		subscriber: kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "websocket_processor"),
+	}
 }
 
 func (k *KafkaWsProcessor) Start() {
@@ -18,9 +22,8 @@ func (k *KafkaWsProcessor) Start() {
 	if err != nil {
 		log.Panicln("Failed to get hub:", err)
 	}
-	sub := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages")
 	go func() {
-		if err := sub.Subscribe("_", func(key string, value []byte) error {
+		if err := k.subscriber.Subscribe("_", func(key string, value []byte) error {
 			chat_event_kafka.BroadcastMessage(value)
 			return nil
 		}); err != nil {

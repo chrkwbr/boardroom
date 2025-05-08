@@ -1,4 +1,4 @@
-package ws
+package handler
 
 import (
 	"backend/chat/command/domain"

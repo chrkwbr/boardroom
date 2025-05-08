@@ -24,12 +24,12 @@ func NewKafkaWriter(brokers []string) pubsub.EventPublisher {
 	}
 }
 
-func NewKafkaReader(brokers []string, topic string) pubsub.EventSubscriber {
+func NewKafkaReader(brokers []string, topic string, groupId string) pubsub.EventSubscriber {
 	return &KafkaReader{
 		reader: kafka.NewReader(kafka.ReaderConfig{
 			Brokers:  brokers,
 			Topic:    topic,
-			GroupID:  "chat-group",
+			GroupID:  groupId,
 			MinBytes: 1,    // ToDo: adjust as needed
 			MaxBytes: 10e6, // 10MB
 		}),

@@ -5,11 +5,11 @@ import (
 	processor2 "backend/chat/command/processor"
 	persistence2 "backend/chat/command/repository/persistence"
 	"backend/chat/command/usecase"
-	processor3 "backend/chat/processor"
 	chatqueryApi "backend/chat/query/api"
-	"backend/chat/query/processor"
+	processor3 "backend/chat/query/processor"
 	"backend/chat/query/service"
-	wschat "backend/chat/ws"
+	wschat "backend/chat/ws/handler"
+	"backend/chat/ws/processor"
 	tx "backend/infra/db"
 	"backend/infra/pubsub/kafka"
 	"database/sql"
@@ -61,18 +61,17 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	processor3.NewKafkaWsProcessor().Start()
+	processor.NewKafkaWsProcessor().Start()
 	ws := r.Group("/ws")
 	chatWs := wschat.NewChatWebSocket()
 	chatWs.RegisterRoutes(ws)
-	rp := processor.NewRedisProcessor(RedisClient)
+	processor3.NewRedisProcessor(RedisClient).Start()
 
 	defer func() {
 		if err := ChatDB.Close(); err != nil {
 			log.Println("Error closing database connection:", err)
 		}
 		chatOutboxProcessor.Close()
-		rp.Close()
 
 		if err := RedisClient.Close(); err != nil {
 			log.Println("Error closing Redis client:", err)
