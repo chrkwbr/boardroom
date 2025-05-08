@@ -37,7 +37,7 @@ func NewOutboxProcessor(
 		chatOutboxRepository: chatOutboxRepository,
 		publisher:            publisher,
 		hub:                  h,
-		client:               h.CreateAndRegisterClient(10),
+		client:               h.CreateAndRegisterClient(256),
 	}
 	go processor.client.Receive(processor.OutboxReceiver)
 	return processor

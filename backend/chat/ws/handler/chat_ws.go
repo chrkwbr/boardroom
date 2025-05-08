@@ -61,7 +61,7 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 			return
 		}
 	}
-	client := wsChatEventPusherHub.CreateAndRegisterClient(256)
+	client := wsChatEventPusherHub.CreateAndRegisterClient(32)
 
 	closeClient := func() {
 		activeSockets.mu.Lock()

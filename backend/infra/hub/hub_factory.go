@@ -1,7 +1,7 @@
 package hub
 
 import (
-	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -12,10 +12,28 @@ const (
 	ChatEventWsPusher hubKey = "chat_event_ws_pusher"
 )
 
+var hubParams = map[hubKey]*HubParams{
+	ChatEventOutbox: {
+		broadcastBuffer:  256,
+		registerBuffer:   10,
+		unregisterBuffer: 10,
+	},
+	ChatEventWsPusher: {
+		broadcastBuffer:  256,
+		registerBuffer:   256,
+		unregisterBuffer: 256,
+	},
+}
+
+type HubParams struct {
+	broadcastBuffer  int32
+	registerBuffer   int32
+	unregisterBuffer int32
+}
+
 type HubFactory struct {
-	mu       sync.Mutex
-	hubs     map[hubKey]*Hub
-	newHubFn func() *Hub
+	mu   sync.Mutex
+	hubs map[hubKey]*Hub
 }
 
 var (
@@ -27,9 +45,6 @@ func GetHubFactory() *HubFactory {
 	once.Do(func() {
 		instance = &HubFactory{
 			hubs: make(map[hubKey]*Hub),
-			newHubFn: func() *Hub {
-				return newHub()
-			},
 		}
 	})
 	return instance
@@ -38,7 +53,6 @@ func GetHubFactory() *HubFactory {
 func (f *HubFactory) SetNewHubFn(fn func() *Hub) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.newHubFn = fn
 }
 
 func (f *HubFactory) GetHub(name hubKey) (*Hub, error) {
@@ -49,11 +63,11 @@ func (f *HubFactory) GetHub(name hubKey) (*Hub, error) {
 		return hub, nil
 	}
 
-	if f.newHubFn() == nil {
-		return nil, errors.New("hub creation function is not set")
+	hubParam := hubParams[name]
+	if hubParam == nil {
+		return nil, fmt.Errorf("hub params not found for %s", name)
 	}
-
-	hub := f.newHubFn()
+	hub := newHub(hubParam.broadcastBuffer, hubParam.registerBuffer, hubParam.unregisterBuffer)
 	f.hubs[name] = hub
 
 	go hub.Run()
