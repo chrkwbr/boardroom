@@ -2,8 +2,8 @@ import MainPanel from "./MainPanel.tsx";
 
 const Sidebar = () => {
   return (
-    <div className="drawer drawer-open">
-      <input id="my-drawer-2" type="checkbox" className="drawer-toggle" />
+    <div className="drawer lg:drawer-open">
+      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
       <div className="drawer-content flex flex-col items-center justify-center">
         <MainPanel />
       </div>
@@ -14,7 +14,7 @@ const Sidebar = () => {
           </h1>
         </div>
         <label
-          htmlFor="my-drawer-2"
+          htmlFor="my-drawer"
           aria-label="close sidebar"
           className="drawer-overlay"
         >
