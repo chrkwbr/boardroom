@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"backend/chat/event"
 	"encoding/json"
 	"github.com/google/uuid"
 )
@@ -13,14 +14,6 @@ type Chat struct {
 	Timestamp int64
 }
 
-type ChatEvent struct {
-	ChatId    uuid.UUID
-	EventType string
-	Version   int64
-	Payload   []byte
-	Timestamp int64
-}
-
 type ChatEventOutbox struct {
 	EventId   int64
 	EventType string
@@ -28,12 +21,12 @@ type ChatEventOutbox struct {
 	Timestamp int64
 }
 
-func (c *Chat) AsCreateEvent() ChatEvent {
+func (c *Chat) AsCreateEvent() event.ChatEvent {
 	json_chat, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
-	return ChatEvent{
+	return event.ChatEvent{
 		ChatId:    c.ID,
 		EventType: "chat_created",
 		Version:   1,
@@ -42,7 +35,7 @@ func (c *Chat) AsCreateEvent() ChatEvent {
 	}
 }
 
-func (e *ChatEvent) AsOutbox(eventId int64) ChatEventOutbox {
+func AsOutbox(eventId int64, e event.ChatEvent) ChatEventOutbox {
 	return ChatEventOutbox{
 		EventId:   eventId,
 		EventType: e.EventType,

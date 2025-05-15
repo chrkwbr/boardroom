@@ -43,7 +43,7 @@ func (uc *ChatUseCase) CreateChat(sender string, room string, message string) er
 		if err != nil {
 			return err
 		}
-		outbox := event.AsOutbox(eventId)
+		outbox := domain.AsOutbox(eventId, event)
 		_, err = uc.chatOutboxRepository.Save(&outbox, tx)
 		if err != nil {
 			return err

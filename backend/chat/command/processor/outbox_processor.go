@@ -109,6 +109,9 @@ func (p *OutboxProcessor) processOutbox(ctx context.Context) error {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
+			// ToDo backward compatibility must be ensured
+			// idea1. set "version" field in topic
+			// idea2. use protobuf or avro
 			if err := p.publisher.Publish("chat_messages", strconv.FormatInt(event.EventId, 10), event.Payload); err != nil {
 				return err
 			}
