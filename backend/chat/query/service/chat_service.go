@@ -4,7 +4,10 @@ import (
 	"backend/chat/command/domain"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/redis/go-redis/v9"
+	"log"
+	"slices"
 )
 
 type ChatService struct {
@@ -18,19 +21,32 @@ func NewChatService(redisClient *redis.Client) *ChatService {
 }
 
 func (s *ChatService) ListMessage(ctx context.Context, room string) ([]domain.Chat, error) {
-	key := "chat:room:myroom"
-	//key := "chat:room:" + room
+	key := fmt.Sprintf("chats:%v", "myroom") // ToDo use parameter room
+	chatIds, err := s.redisClient.ZRevRange(ctx, key, 0, 99).Result()
+	if err != nil {
+		return nil, err
+	}
+	if len(chatIds) == 0 {
+		return make([]domain.Chat, 0), nil
+	}
+	slices.Reverse(chatIds)
 
-	result, err := s.redisClient.LRange(ctx, key, 0, -1).Result()
+	chatKeys := make([]string, len(chatIds))
+	for i, chatId := range chatIds {
+		chatKeys[i] = fmt.Sprintf("chat:%s", chatId)
+	}
+
+	chats, err := s.redisClient.MGet(ctx, chatKeys...).Result()
 	if err != nil {
 		return nil, err
 	}
 
 	var messages []domain.Chat
-	for _, msg := range result {
+	for _, c := range chats {
 		chat := &domain.Chat{}
-		if err := json.Unmarshal([]byte(msg), chat); err != nil {
-			return nil, err
+		if err := json.Unmarshal([]byte(c.(string)), chat); err != nil {
+			log.Println("Failed to unmarshal chat:", err)
+			continue
 		}
 		messages = append(messages, *chat)
 	}

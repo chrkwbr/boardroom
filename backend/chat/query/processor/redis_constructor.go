@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
+	"time"
 )
 
 type RedisConstructor struct {
@@ -28,7 +29,9 @@ func (p *RedisConstructor) Start() {
 			p.process(value, context.Background())
 			return nil
 		}); err != nil {
-			log.Panicln("Failed to subscribe to event:", err)
+			log.Panicln(
+
+				"Failed to subscribe to event:", err)
 		}
 		log.Println("Event subscriber started")
 	}()
@@ -40,12 +43,21 @@ func (p *RedisConstructor) process(msg []byte, ctx context.Context) {
 		log.Println("Failed to unmarshal chat:", err)
 		return
 	}
-	key := fmt.Sprintf("chat:room:%s", chat.Room)
-	// ToDo check if the key exists
-	err := p.redisClient.RPush(ctx, key, msg).Err()
+	chatID := chat.ID
+	key := fmt.Sprintf("chat:%s", chatID)
+	err := p.redisClient.Set(ctx, key, msg, time.Hour*24*10).Err()
 	if err != nil {
 		log.Println("Error publishing to Redis:", err)
 		return
 	}
 
+	chatRoomKey := fmt.Sprintf("chats:%v", chat.Room)
+	z := redis.Z{
+		Score:  float64(chat.Timestamp),
+		Member: fmt.Sprintf("%s", chatID),
+	}
+	err = p.redisClient.ZAddNX(ctx, chatRoomKey, z).Err()
+	if err != nil {
+		log.Println("Error adding to Redis sorted set:", err)
+	}
 }
