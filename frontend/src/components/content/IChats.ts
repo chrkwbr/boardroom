@@ -14,12 +14,15 @@ export interface IPostChat {
   message: string;
 }
 
+type EventType = "chat_created" | "chat_edited" | "chat_deleted";
+
 export interface ChatEvent {
-  ID: string | null;
-  Sender: string;
-  Room: string;
-  Message: string;
-  Timestamp: number;
+  id: string
+  event_type: EventType
+  sender: string
+  room: string
+  message: string
+  timestamp: number
 }
 
 export const fetchChats: () => Promise<IChat[]> = async () => {
@@ -39,6 +42,20 @@ export const postChat = async (chat: IPostChat) => {
     IPostChat,
     IPostChat
   >("chats/channel/", chat);
+
+  if (apiResult.ok) {
+    return apiResult.data;
+  } else {
+    alert(`Error: ${apiResult.data.message}`);
+    return null;
+  }
+};
+
+export const updateChat = async (chat: IPostChat) => {
+  const apiResult: ApiSuccessResult<IPostChat> | ApiErrorResult = await post<
+    IPostChat,
+    IPostChat
+  >(`chats/channel/${chat.id}`, chat);
 
   if (apiResult.ok) {
     return apiResult.data;

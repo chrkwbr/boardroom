@@ -2,6 +2,7 @@ package handler
 
 import (
 	"backend/chat/command/domain"
+	"backend/chat/event"
 	"backend/infra/hub"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
@@ -92,13 +93,27 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	}()
 
 	go client.Receive(func(msg []byte) {
+		chatEvent := &event.ChatEvent{}
+		if err := json.Unmarshal(msg, chatEvent); err != nil {
+			log.Println("Failed to unmarshal chat:", err)
+			return
+		}
 		chat := &domain.Chat{}
-		if err := json.Unmarshal(msg, chat); err != nil {
+		if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
 			log.Println("Failed to unmarshal chat:", err)
 			return
 		}
 
-		if err := conn.WriteJSON(chat); err != nil {
+		wsChat := &WsChatEvent{
+			ChatId:    chatEvent.ChatId.String(),
+			EventType: chatEvent.EventType,
+			Sender:    chat.Sender,
+			Room:      chat.Room,
+			Message:   chat.Message,
+			Timestamp: chat.Timestamp,
+		}
+
+		if err := conn.WriteJSON(wsChat); err != nil {
 			log.Println("WebSocket write error:", err)
 			return
 		}

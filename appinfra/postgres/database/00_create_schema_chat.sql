@@ -12,6 +12,9 @@ CREATE TABLE IF NOT EXISTS chat_events (
     created_at BIGINT NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_chat_events_chat_id ON chat_events (chat_id);
+ALTER TABLE chat_events ADD CONSTRAINT unique_chat_id_version UNIQUE (chat_id, version);
+
 CREATE TABLE IF NOT EXISTS chat_outbox (
     id SERIAL PRIMARY KEY,
     event_id BIGINT NOT NULL UNIQUE,

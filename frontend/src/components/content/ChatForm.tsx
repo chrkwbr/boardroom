@@ -1,7 +1,9 @@
-import {useState} from "react";
+import { useState } from "react";
 
-const ChatForm = (props: { onSend: (chat: string) => void }) => {
-  const [chat, setChat] = useState<string>("");
+const ChatForm = (
+  props: { onSend: (chat: string) => void; defaultText: string },
+) => {
+  const [chat, setChat] = useState<string>(props.defaultText);
 
   const onSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,7 +36,7 @@ const ChatForm = (props: { onSend: (chat: string) => void }) => {
           <div className="grid grid-cols-12 w-full">
             <div className="col-span-10 px-1">
               <textarea
-                className="textarea textarea-neutral w-full"
+                className="textarea textarea-primary w-full"
                 onChange={handleChatChange}
                 onKeyDown={handleKeyDown}
                 value={chat}

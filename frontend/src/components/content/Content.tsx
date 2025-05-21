@@ -5,6 +5,7 @@ import {useCallback, useEffect, useRef, useState} from "react";
 
 const Content = () => {
   const [data, setData] = useState<IChat[]>([]);
+  const dataRef = useRef<IChat[]>([]);
   const socketRef = useRef<WebSocket>(null);
   const [socketConnected, setSocketConnected] = useState(false);
 
@@ -16,6 +17,7 @@ const Content = () => {
         it.date = new Date(it.date * 1000);
         return it;
       })
+      dataRef.current = d;
       setData(d);
     })();
 
@@ -25,7 +27,7 @@ const Content = () => {
     }
 
     console.log("WebSocket接続を開始します...");
-    const socket = new WebSocket("ws://localhost:8080/ws/chats/chnnelId1/");
+    const socket = new WebSocket("ws://localhost:8080/ws/chats/channel/");
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
@@ -37,20 +39,21 @@ const Content = () => {
       try {
         const eventData = JSON.parse(event.data);
         const chatEvent = eventData satisfies ChatEvent;
-        const newChat: IChat = {
-          id: chatEvent.ID,
-          sender: chatEvent.Sender,
+        const chat: IChat = {
+          id: chatEvent.id,
+          sender: chatEvent.sender,
           image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
-          message: chatEvent.Message,
-          date: new Date(chatEvent.Timestamp * 1000),
+          message: chatEvent.message,
+          date: new Date(chatEvent.timestamp * 1000),
         }
-        setData((prevData) => {
-          if (newChat.id && prevData.some((chat) => chat.id === newChat.id)) {
-            console.log("skip duplicated", newChat.id);
-            return prevData;
-          }
-          return [...prevData, newChat];
-        });
+        switch (eventData.event_type) {
+          case "chat_created":
+            addChat(chat);
+            break
+          case "chat_edited":
+            editChat(chat);
+            break
+        }
       } catch (error) {
         console.error("メッセージの解析に失敗:", error);
       }
@@ -74,6 +77,28 @@ const Content = () => {
     };
   }, []);
 
+  const addChat = (chat: IChat) => {
+    if (chat.id && dataRef.current.some((c) => c.id === chat.id)) {
+      console.log("skip duplicated", chat.id);
+      return
+    }
+    const updatedData = [...dataRef.current, chat];
+    dataRef.current = updatedData;
+    setData(updatedData);
+  }
+
+  const editChat = (chat: IChat) => {
+    const index = dataRef.current.findIndex((c) => c.id === chat.id);
+    if (index === -1) {
+      console.log("skip not found", chat.id);
+      return
+    }
+    const updatedData = [...dataRef.current];
+    updatedData[index] = chat;
+    dataRef.current = updatedData;
+    setData([...updatedData]);
+  }
+
   const handleSend = useCallback((chat: string) => {
     (async () => {
       const newChat: IPostChat = {
@@ -94,7 +119,7 @@ const Content = () => {
         <ChatHistory data={data} />
       </div>
       <div className="sticky bottom-0 left-0 right-0 bg-base-100">
-        <ChatForm onSend={handleSend} />
+        <ChatForm onSend={handleSend} defaultText="" />
       </div>
     </div>
   );

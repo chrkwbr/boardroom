@@ -9,3 +9,9 @@ type ChatEvent struct {
 	Payload   []byte
 	Timestamp int64
 }
+
+const (
+	ChatCreatedEvent = "chat_created"
+	ChatEditedEvent  = "chat_edited"
+	ChatDeletedEvent = "chat_deleted"
+)

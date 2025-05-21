@@ -21,7 +21,7 @@ func NewChatService(redisClient *redis.Client) *ChatService {
 }
 
 func (s *ChatService) ListMessage(ctx context.Context, room string) ([]domain.Chat, error) {
-	key := fmt.Sprintf("chats:%v", "myroom") // ToDo use parameter room
+	key := fmt.Sprintf("chats:%v", room)
 	chatIds, err := s.redisClient.ZRevRange(ctx, key, 0, 99).Result()
 	if err != nil {
 		return nil, err
