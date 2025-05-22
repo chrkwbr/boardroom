@@ -50,6 +50,8 @@ func (p *RedisConstructor) process(msg []byte, ctx context.Context) {
 		p.createReadModel(chatEvent, ctx)
 	case event.ChatEditedEvent:
 		p.updateReadModel(chatEvent, ctx)
+	case event.ChatDeletedEvent:
+		p.DeleteReadModel(chatEvent, ctx)
 	}
 
 }
@@ -92,4 +94,22 @@ func (p *RedisConstructor) updateReadModel(chatEvent *event.ChatEvent, ctx conte
 	}
 	chatHistoryKey := fmt.Sprintf("chats:%v:history", chatEvent.ChatId)
 	p.redisClient.LPush(ctx, chatHistoryKey, previewChat)
+}
+
+func (p *RedisConstructor) DeleteReadModel(chatEvent *event.ChatEvent, ctx context.Context) {
+	chat := &domain.Chat{}
+	if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
+		log.Println("Failed to unmarshal chat:", err)
+		return
+	}
+	chatRoomKey := fmt.Sprintf("chats:%v", chat.Room)
+	if err := p.redisClient.ZRem(ctx, chatRoomKey, fmt.Sprintf("%s", chatEvent.ChatId)).Err(); err != nil {
+		log.Println("Error removing from Redis sorted set:", err)
+	}
+
+	key := fmt.Sprintf("chat:%s", chatEvent.ChatId)
+	if err := p.redisClient.Del(ctx, key).Err(); err != nil {
+		log.Println("Error deleting from Redis:", err)
+		return
+	}
 }

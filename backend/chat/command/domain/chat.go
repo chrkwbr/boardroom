@@ -51,6 +51,20 @@ func (c *Chat) AsEditEvent() event.ChatEvent {
 	}
 }
 
+func (c *Chat) AsDeleteEvent() event.ChatEvent {
+	json_chat, err := json.Marshal(c)
+	if err != nil {
+		panic(err)
+	}
+	return event.ChatEvent{
+		ChatId:    c.ID,
+		EventType: event.ChatDeletedEvent,
+		Version:   c.Version,
+		Payload:   json_chat,
+		Timestamp: time.Now().Unix(),
+	}
+}
+
 func AsOutbox(eventId int64, e event.ChatEvent) ChatEventOutbox {
 	marshaledEvent, err := json.Marshal(e)
 	if err != nil {

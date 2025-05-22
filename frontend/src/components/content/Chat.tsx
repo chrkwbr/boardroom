@@ -1,6 +1,8 @@
-import { useCallback, useState } from "react";
-import { IChat, IPostChat, postChat, updateChat } from "./IChats.ts";
+// deno-lint-ignore-file ban-ts-comment
+import {useCallback, useState} from "react";
+import {deleteChat, IChat, IPostChat, updateChat} from "./IChats.ts";
 import ChatForm from "./ChatForm.tsx";
+import Dialog from "../modal/dialog.tsx";
 
 const Chat = (props: { chat: IChat }) => {
   const [editing, setEditing] = useState(false);
@@ -14,7 +16,22 @@ const Chat = (props: { chat: IChat }) => {
   };
 
   const handleDelete = () => {
-    // Implement delete functionality here
+    const elementById = document.getElementById(`my_modal_${props.chat.id}`);
+    if (elementById) {
+      // @ts-ignore
+      elementById.showModal();
+    }
+  };
+
+  const delChat = () => {
+    (async () => {
+      const toDelete: IPostChat = {
+        id: props.chat.id,
+        sender: "You",
+        message: "",
+      };
+      await deleteChat(toDelete);
+    })();
   };
 
   const handleEdit = useCallback((chat: string) => {
@@ -100,23 +117,29 @@ const Chat = (props: { chat: IChat }) => {
               ? (
                 <>
                   <li onClick={cancelEdit}>
-                    <a>Cancel Edit</a>
+                    <button type="button" className="btn btn-sm btn-outline btn-secondary">Cancel Edit</button>
                   </li>
                 </>
               )
               : (
                 <>
                   <li onClick={startEdit}>
-                    <a>Edit</a>
+                    <button type="button" className="btn btn-sm btn-outline btn-secondary">Edit</button>
                   </li>
                 </>
               )}
-            <li>
-              <a>Delete</a>
+            <li onClick={handleDelete}>
+              <button type="button" className="btn btn-sm btn-outline btn-warning">Delete</button>
             </li>
           </ul>
         </div>
       </div>
+      <Dialog
+        deleteHandler={delChat}
+        id={props.chat.id!}
+        text={`Are you sure you want to delete message?`}
+        title={`Delete message`}
+      />
     </>
   );
 };

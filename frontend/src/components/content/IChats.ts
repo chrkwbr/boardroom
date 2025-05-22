@@ -1,4 +1,4 @@
-import {ApiErrorResult, ApiSuccessResult, get, post} from "../../fetch.ts";
+import {ApiErrorResult, ApiSuccessResult, del, get, post} from "../../fetch.ts";
 
 export interface IChat {
   id: string | null;
@@ -64,3 +64,16 @@ export const updateChat = async (chat: IPostChat) => {
     return null;
   }
 };
+
+export const deleteChat = async (chat: IPostChat) => {
+  const apiResult: ApiSuccessResult<string> | ApiErrorResult = await del<
+    string
+  >(`chats/channel/${chat.id}`);
+
+  if (apiResult.ok) {
+    return apiResult.data;
+  } else {
+    alert(`Error: ${apiResult.data.message}`);
+    return null;
+  }
+}

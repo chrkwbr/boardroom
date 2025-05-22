@@ -52,6 +52,32 @@ export const post = async <P, T>(
   }
 };
 
+export const del = async <T>(
+  path: string,
+  options?: RequestInit,
+): Promise<ApiResult<T>> => {
+  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
+  const url: string = `${baseUrl}/api/${path}`;
+  try {
+    const response: Response = await fetch(url, {
+      method: "DELETE",
+      ...options,
+    });
+    return handleResponse(response);
+  } catch (e: any) {
+    let message = "Unknown error occurred";
+    if (e instanceof Error) {
+      message = e.message;
+    }
+    return {
+      ok: false,
+      data: {
+        message: message,
+      },
+    };
+  }
+}
+
 const handleResponse = async <T>(response: Response): Promise<ApiResult<T>> => {
   const isJson = response.headers.get("content-type")?.includes(
     "application/json",

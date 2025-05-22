@@ -53,6 +53,9 @@ const Content = () => {
           case "chat_edited":
             editChat(chat);
             break
+          case "chat_deleted":
+            deleteChat(chat);
+            break
         }
       } catch (error) {
         console.error("メッセージの解析に失敗:", error);
@@ -95,6 +98,18 @@ const Content = () => {
     }
     const updatedData = [...dataRef.current];
     updatedData[index] = chat;
+    dataRef.current = updatedData;
+    setData([...updatedData]);
+  }
+
+  const deleteChat = (chat: IChat) => {
+    const index = dataRef.current.findIndex((c) => c.id === chat.id);
+    if (index === -1) {
+      console.log("skip not found", chat.id);
+      return
+    }
+    const updatedData = [...dataRef.current];
+    updatedData.splice(index, 1);
     dataRef.current = updatedData;
     setData([...updatedData]);
   }

@@ -43,6 +43,11 @@ func (s *ChatService) ListMessage(ctx context.Context, room string) ([]domain.Ch
 
 	var messages []domain.Chat
 	for _, c := range chats {
+		if c == nil || c == "" {
+			log.Println("Chat not found:", c)
+			continue
+		}
+
 		chat := &domain.Chat{}
 		if err := json.Unmarshal([]byte(c.(string)), chat); err != nil {
 			log.Println("Failed to unmarshal chat:", err)
