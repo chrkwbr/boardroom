@@ -3,6 +3,7 @@ import {useCallback, useState} from "react";
 import {deleteChat, IChat, IPostChat, updateChat} from "./IChats.ts";
 import ChatForm from "./ChatForm.tsx";
 import Dialog from "../modal/dialog.tsx";
+import {formatDateToIsoDateTime} from "../../util/date_helper.ts";
 
 const Chat = (props: { chat: IChat }) => {
   const [editing, setEditing] = useState(false);
@@ -54,7 +55,7 @@ const Chat = (props: { chat: IChat }) => {
       <div>
         <div>{props.chat.sender}</div>
         <div className="text-xs uppercase font-semibold opacity-60">
-          {props.chat.date.toString()}
+          {formatDateToIsoDateTime(props.chat.date)}
         </div>
       </div>
       {!editing &&
@@ -117,19 +118,34 @@ const Chat = (props: { chat: IChat }) => {
               ? (
                 <>
                   <li onClick={cancelEdit}>
-                    <button type="button" className="btn btn-sm btn-outline btn-secondary">Cancel Edit</button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline btn-secondary"
+                    >
+                      Cancel Edit
+                    </button>
                   </li>
                 </>
               )
               : (
                 <>
                   <li onClick={startEdit}>
-                    <button type="button" className="btn btn-sm btn-outline btn-secondary">Edit</button>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-outline btn-secondary"
+                    >
+                      Edit
+                    </button>
                   </li>
                 </>
               )}
             <li onClick={handleDelete}>
-              <button type="button" className="btn btn-sm btn-outline btn-warning">Delete</button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline btn-warning"
+              >
+                Delete
+              </button>
             </li>
           </ul>
         </div>
