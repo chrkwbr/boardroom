@@ -1,6 +1,7 @@
 package api
 
 import (
+	"backend/chat/query"
 	"backend/chat/query/service"
 	"github.com/gin-gonic/gin"
 	"log"
@@ -17,41 +18,56 @@ func NewChatQueryController(chatService *service.ChatService) *ChatQueryControll
 	}
 }
 
-type ChatResponse struct {
-	ID        string `json:"id"`
-	Sender    string `json:"sender"`
-	Image     string `json:"image"`
-	Message   string `json:"message"`
-	Timestamp int64  `json:"date"`
-}
-
 func (con *ChatQueryController) RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
 		chatGroup.GET("/:room/", con.list)
+		chatGroup.GET("/:room/:chatId/history/", con.history)
 	}
 }
 
-func (con *ChatQueryController) list(c *gin.Context) {
-	room := c.Param("room")
-	message, err := con.chatService.ListMessage(c, room)
+func (con *ChatQueryController) list(ctx *gin.Context) {
+	room := ctx.Param("room")
+	message, err := con.chatService.ListMessage(ctx, room)
 	if err != nil {
 		log.Println("Error listing messages:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list messages"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list messages"})
 		return
 	}
-	// to ChatResponse
-	var chatResponses []ChatResponse
+	var chatResponses []query.ChatResponse
 	for _, chat := range message {
-		chatResponse := ChatResponse{
-			ID:        chat.ID.String(),
+		chatResponse := query.ChatResponse{
+			ID:        chat.ID,
 			Sender:    chat.Sender,
-			Image:     "https://img.daisyui.com/images/profile/demo/1@94.webp", // Placeholder for image URL
 			Message:   chat.Message,
-			Timestamp: chat.Timestamp,
+			Version:   chat.Version,
+			Timestamp: chat.CreatedAt,
 		}
 		chatResponses = append(chatResponses, chatResponse)
 	}
 
-	c.JSON(http.StatusOK, chatResponses)
+	ctx.JSON(http.StatusOK, chatResponses)
+}
+
+func (con *ChatQueryController) history(ctx *gin.Context) {
+	room := ctx.Param("room")
+	chatId := ctx.Param("chatId")
+	message, err := con.chatService.GetHistory(ctx, room, chatId)
+	if err != nil {
+		log.Println("Error listing messages:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list messages"})
+		return
+	}
+	var chatResponses []query.ChatResponse
+	for _, chat := range message {
+		chatResponse := query.ChatResponse{
+			ID:        chat.ID,
+			Sender:    chat.Sender,
+			Message:   chat.Message,
+			Version:   chat.Version,
+			Timestamp: chat.UpdatedAt,
+		}
+		chatResponses = append(chatResponses, chatResponse)
+	}
+	ctx.JSON(http.StatusOK, chatResponses)
 }

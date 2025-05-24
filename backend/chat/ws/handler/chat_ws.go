@@ -110,6 +110,7 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 			Sender:    chat.Sender,
 			Room:      chat.Room,
 			Message:   chat.Message,
+			Version:   chat.Version,
 			Timestamp: chat.Timestamp,
 		}
 

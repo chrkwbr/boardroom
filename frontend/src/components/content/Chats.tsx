@@ -2,7 +2,7 @@ import Chat from "./Chat.tsx";
 import {IChat} from "./IChats.ts";
 import {useLayoutEffect, useRef} from "react";
 
-const ChatHistory = (props: { data: IChat[] }) => {
+const Chats = (props: { data: IChat[] }) => {
   const endOfMessages = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     if (endOfMessages.current) {
@@ -27,4 +27,4 @@ const ChatHistory = (props: { data: IChat[] }) => {
   );
 };
 
-export default ChatHistory;
+export default Chats;

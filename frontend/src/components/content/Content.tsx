@@ -1,4 +1,4 @@
-import ChatHistory from "./ChatHistory.tsx";
+import Chats from "./Chats.tsx";
 import ChatForm from "./ChatForm.tsx";
 import {ChatEvent, fetchChats, IChat, IPostChat, postChat} from "./IChats.ts";
 import {useCallback, useEffect, useRef, useState} from "react";
@@ -13,10 +13,6 @@ const Content = () => {
     (async () => {
       const d: IChat[] = await fetchChats();
       if (!d) return;
-      Array.from(d).map(it => {
-        it.date = new Date(it.date * 1000);
-        return it;
-      })
       dataRef.current = d;
       setData(d);
     })();
@@ -44,6 +40,7 @@ const Content = () => {
           sender: chatEvent.sender,
           image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
           message: chatEvent.message,
+          version: chatEvent.version,
           date: new Date(chatEvent.timestamp * 1000),
         }
         switch (eventData.event_type) {
@@ -131,7 +128,7 @@ const Content = () => {
         className="h-0 flex-1 overflow-y-auto"
         style={{ maxHeight: "calc(100vh - 10rem)" }}
       >
-        <ChatHistory data={data} />
+        <Chats data={data} />
       </div>
       <div className="sticky bottom-0 left-0 right-0 bg-base-100">
         <ChatForm onSend={handleSend} defaultText="" />

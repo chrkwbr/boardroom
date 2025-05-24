@@ -76,10 +76,9 @@ func (uc *ChatUseCase) EditChat(chatId uuid.UUID, message string) error {
 		if err := json.Unmarshal(chatEvent.Payload, &chat); err != nil {
 			return err
 		}
-		chat.Message = message
-		chat.Version = chat.Version + 1
+		editedChat := chat.Edit(message)
 
-		event := chat.AsEditEvent()
+		event := editedChat.AsEditEvent()
 		eventId, err := uc.chatRepository.Save(&event, tx)
 		if err != nil {
 			return err

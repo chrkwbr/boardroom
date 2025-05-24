@@ -7,6 +7,7 @@ import (
 	"backend/chat/command/usecase"
 	chatqueryApi "backend/chat/query/api"
 	processor3 "backend/chat/query/processor"
+	"backend/chat/query/repository"
 	"backend/chat/query/service"
 	wschat "backend/chat/ws/handler"
 	"backend/chat/ws/processor"
@@ -50,8 +51,9 @@ func main() {
 			tx.NewTransactionManager(ChatDB),
 		),
 	)
+	chatReadModelRepository := repository.NewChatReadModelRepository(RedisClient)
 	chatQueryApi := chatqueryApi.NewChatQueryController(
-		service.NewChatService(RedisClient),
+		service.NewChatService(chatReadModelRepository),
 	)
 
 	api := r.Group("/api")
@@ -61,15 +63,15 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	subscriber_websocket_processor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "websocket_processor")
-	processor.NewWsChatEventPusher(subscriber_websocket_processor).Start()
+	subscriberWebsocketProcessor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "websocket_processor")
+	processor.NewWsChatEventPusher(subscriberWebsocketProcessor).Start()
 
 	ws := r.Group("/ws")
 	chatWs := wschat.NewChatWebSocket()
 	chatWs.RegisterRoutes(ws)
 
-	subscriber_redis_constructor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "redis_constructor")
-	processor3.NewRedisConstructor(subscriber_redis_constructor, RedisClient).Start()
+	subscriberRedisConstructor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat_messages", "redis_constructor")
+	processor3.NewRedisConstructor(subscriberRedisConstructor, chatReadModelRepository).Start()
 
 	defer func() {
 		if err := ChatDB.Close(); err != nil {
@@ -82,8 +84,8 @@ func main() {
 		}
 
 		eventPublisher.Close()
-		subscriber_websocket_processor.Close()
-		subscriber_redis_constructor.Close()
+		subscriberWebsocketProcessor.Close()
+		subscriberRedisConstructor.Close()
 	}()
 
 	r.Run()

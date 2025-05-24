@@ -1,33 +1,31 @@
 package processor
 
 import (
-	"backend/chat/command/domain"
 	"backend/chat/event"
+	"backend/chat/query"
+	"backend/chat/query/repository"
 	"backend/infra/pubsub"
 	"context"
 	"encoding/json"
-	"fmt"
-	"github.com/redis/go-redis/v9"
 	"log"
-	"time"
 )
 
 type RedisConstructor struct {
-	subscriber  pubsub.EventSubscriber
-	redisClient *redis.Client
+	subscriber pubsub.EventSubscriber
+	repository *repository.ChatReadModelRepository
 }
 
-func NewRedisConstructor(sub pubsub.EventSubscriber, rdb *redis.Client) *RedisConstructor {
+func NewRedisConstructor(sub pubsub.EventSubscriber, modelRepository *repository.ChatReadModelRepository) *RedisConstructor {
 	return &RedisConstructor{
-		subscriber:  sub,
-		redisClient: rdb,
+		subscriber: sub,
+		repository: modelRepository,
 	}
 }
 
-func (p *RedisConstructor) Start() {
+func (rc *RedisConstructor) Start() {
 	go func() {
-		if err := p.subscriber.Subscribe("_", func(key string, value []byte) error {
-			p.process(value, context.Background())
+		if err := rc.subscriber.Subscribe("_", func(key string, value []byte) error {
+			rc.process(value, context.Background())
 			return nil
 		}); err != nil {
 			log.Panicln(
@@ -38,7 +36,7 @@ func (p *RedisConstructor) Start() {
 	}()
 }
 
-func (p *RedisConstructor) process(msg []byte, ctx context.Context) {
+func (rc *RedisConstructor) process(msg []byte, ctx context.Context) {
 	chatEvent := &event.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
 		log.Println("Failed to unmarshal chat:", err)
@@ -47,69 +45,63 @@ func (p *RedisConstructor) process(msg []byte, ctx context.Context) {
 
 	switch chatEvent.EventType {
 	case event.ChatCreatedEvent:
-		p.createReadModel(chatEvent, ctx)
+		rc.createReadModel(ctx, chatEvent)
 	case event.ChatEditedEvent:
-		p.updateReadModel(chatEvent, ctx)
+		rc.updateReadModel(ctx, chatEvent)
 	case event.ChatDeletedEvent:
-		p.DeleteReadModel(chatEvent, ctx)
+		rc.DeleteReadModel(ctx, chatEvent)
 	}
 
 }
 
-func (p *RedisConstructor) createReadModel(chatEvent *event.ChatEvent, ctx context.Context) {
-	key := fmt.Sprintf("chat:%s", chatEvent.ChatId)
-	err := p.redisClient.Set(ctx, key, chatEvent.Payload, time.Hour*24*10).Err()
+func (rc *RedisConstructor) createReadModel(ctx context.Context, chatEvent *event.ChatEvent) {
+	readModel, err := rc.repository.SetChat(ctx, chatEvent)
 	if err != nil {
-		log.Println("Error publishing to Redis:", err)
+		log.Println("Failed to save chat read model:", err)
 		return
 	}
 
-	chat := &domain.Chat{}
-	if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+	if err := rc.repository.LPushHistory(ctx, readModel); err != nil {
+		log.Println("Failed to push chat history:", err)
 		return
 	}
-	chatID := chatEvent.ChatId
 
-	chatRoomKey := fmt.Sprintf("chats:%v", chat.Room)
-	z := redis.Z{
-		Score:  float64(chat.Timestamp),
-		Member: fmt.Sprintf("%s", chatID),
-	}
-	err = p.redisClient.ZAddNX(ctx, chatRoomKey, z).Err()
-	if err != nil {
-		log.Println("Error adding to Redis sorted set:", err)
+	if err := rc.repository.ZAddNXRoomChatIds(ctx, readModel); err != nil {
+		log.Println("Failed to save room chat IDs:", err)
+		return
 	}
 }
 
-func (p *RedisConstructor) updateReadModel(chatEvent *event.ChatEvent, ctx context.Context) {
-	key := fmt.Sprintf("chat:%s", chatEvent.ChatId)
-	previewChat, err := p.redisClient.SetArgs(ctx, key, chatEvent.Payload, redis.SetArgs{
-		Get: true,
-		TTL: time.Hour * 24 * 10,
-	}).Result()
+func (rc *RedisConstructor) updateReadModel(ctx context.Context, chatEvent *event.ChatEvent) {
+	readModel, err := rc.repository.SetChat(ctx, chatEvent)
 	if err != nil {
-		log.Println("Error updating Redis:", err)
+		log.Println("Failed to update chat read model:", err)
 		return
 	}
-	chatHistoryKey := fmt.Sprintf("chats:%v:history", chatEvent.ChatId)
-	p.redisClient.LPush(ctx, chatHistoryKey, previewChat)
+	if err := rc.repository.LPushHistory(ctx, readModel); err != nil {
+		log.Println("Failed to push chat history:", err)
+		return
+	}
 }
 
-func (p *RedisConstructor) DeleteReadModel(chatEvent *event.ChatEvent, ctx context.Context) {
-	chat := &domain.Chat{}
-	if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+func (rc *RedisConstructor) DeleteReadModel(ctx context.Context, chatEvent *event.ChatEvent) {
+	readModel, err := query.FromPayload(chatEvent)
+	if err != nil {
+		log.Println("Failed to convert payload to read model:", err)
 		return
 	}
-	chatRoomKey := fmt.Sprintf("chats:%v", chat.Room)
-	if err := p.redisClient.ZRem(ctx, chatRoomKey, fmt.Sprintf("%s", chatEvent.ChatId)).Err(); err != nil {
-		log.Println("Error removing from Redis sorted set:", err)
+	if err := rc.repository.ZRemRoomChatIds(ctx, readModel.Room, chatEvent.ChatId); err != nil {
+		log.Println("Failed to remove chat ID from room:", err)
+		return
 	}
 
-	key := fmt.Sprintf("chat:%s", chatEvent.ChatId)
-	if err := p.redisClient.Del(ctx, key).Err(); err != nil {
-		log.Println("Error deleting from Redis:", err)
+	if err := rc.repository.DelChat(ctx, chatEvent.ChatId); err != nil {
+		log.Println("Failed to delete chat read model:", err)
+		return
+	}
+
+	if err := rc.repository.DelHistory(ctx, chatEvent.ChatId); err != nil {
+		log.Println("Failed to delete chat history:", err)
 		return
 	}
 }

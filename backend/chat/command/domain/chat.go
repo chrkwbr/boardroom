@@ -16,6 +16,18 @@ type Chat struct {
 	Timestamp int64
 }
 
+func (c *Chat) Edit(message string) Chat {
+	return Chat{
+		ID:        c.ID,
+		Sender:    c.Sender,
+		Room:      c.Room,
+		Message:   message,
+		Version:   c.Version + 1,
+		Timestamp: c.Timestamp,
+	}
+
+}
+
 type ChatEventOutbox struct {
 	EventId   int64
 	EventType string
@@ -24,7 +36,7 @@ type ChatEventOutbox struct {
 }
 
 func (c *Chat) AsCreateEvent() event.ChatEvent {
-	json_chat, err := json.Marshal(c)
+	jsonChat, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
@@ -32,13 +44,13 @@ func (c *Chat) AsCreateEvent() event.ChatEvent {
 		ChatId:    c.ID,
 		EventType: event.ChatCreatedEvent,
 		Version:   1,
-		Payload:   json_chat,
+		Payload:   jsonChat,
 		Timestamp: time.Now().Unix(),
 	}
 }
 
 func (c *Chat) AsEditEvent() event.ChatEvent {
-	json_chat, err := json.Marshal(c)
+	jsonChat, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
@@ -46,13 +58,13 @@ func (c *Chat) AsEditEvent() event.ChatEvent {
 		ChatId:    c.ID,
 		EventType: event.ChatEditedEvent,
 		Version:   c.Version,
-		Payload:   json_chat,
+		Payload:   jsonChat,
 		Timestamp: time.Now().Unix(),
 	}
 }
 
 func (c *Chat) AsDeleteEvent() event.ChatEvent {
-	json_chat, err := json.Marshal(c)
+	jsonChat, err := json.Marshal(c)
 	if err != nil {
 		panic(err)
 	}
@@ -60,7 +72,7 @@ func (c *Chat) AsDeleteEvent() event.ChatEvent {
 		ChatId:    c.ID,
 		EventType: event.ChatDeletedEvent,
 		Version:   c.Version,
-		Payload:   json_chat,
+		Payload:   jsonChat,
 		Timestamp: time.Now().Unix(),
 	}
 }

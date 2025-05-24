@@ -4,6 +4,7 @@ import {deleteChat, IChat, IPostChat, updateChat} from "./IChats.ts";
 import ChatForm from "./ChatForm.tsx";
 import Dialog from "../modal/dialog.tsx";
 import {formatDateToIsoDateTime} from "../../util/date_helper.ts";
+import CHatEditHistory from "./CHatEditHistory.tsx";
 
 const Chat = (props: { chat: IChat }) => {
   const [editing, setEditing] = useState(false);
@@ -22,6 +23,10 @@ const Chat = (props: { chat: IChat }) => {
       // @ts-ignore
       elementById.showModal();
     }
+  };
+
+  const isEdited = (): boolean => {
+    return props.chat.version > 1;
   };
 
   const delChat = () => {
@@ -56,6 +61,7 @@ const Chat = (props: { chat: IChat }) => {
         <div>{props.chat.sender}</div>
         <div className="text-xs uppercase font-semibold opacity-60">
           {formatDateToIsoDateTime(props.chat.date)}
+          {isEdited() && <CHatEditHistory chatId={props.chat.id!} />}
         </div>
       </div>
       {!editing &&
@@ -116,28 +122,24 @@ const Chat = (props: { chat: IChat }) => {
           >
             {editing
               ? (
-                <>
-                  <li onClick={cancelEdit}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline btn-secondary"
-                    >
-                      Cancel Edit
-                    </button>
-                  </li>
-                </>
+                <li onClick={cancelEdit}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline btn-secondary"
+                  >
+                    Cancel Edit
+                  </button>
+                </li>
               )
               : (
-                <>
-                  <li onClick={startEdit}>
-                    <button
-                      type="button"
-                      className="btn btn-sm btn-outline btn-secondary"
-                    >
-                      Edit
-                    </button>
-                  </li>
-                </>
+                <li onClick={startEdit}>
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline btn-secondary"
+                  >
+                    Edit
+                  </button>
+                </li>
               )}
             <li onClick={handleDelete}>
               <button

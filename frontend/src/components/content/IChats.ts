@@ -5,6 +5,7 @@ export interface IChat {
   sender: string;
   image: string;
   message: string;
+  version: number;
   date: Date;
 }
 
@@ -22,20 +23,67 @@ export interface ChatEvent {
   sender: string
   room: string
   message: string
+  version: number
   timestamp: number
 }
 
-export const fetchChats: () => Promise<IChat[]> = async () => {
-  const apiResult: ApiSuccessResult<IChat[]> | ApiErrorResult = await get<
-    IChat[]
-  >("chats/channel/");
+export const fetchChats: () => Promise<IChat[]> = async (roomId: string = "channel") => {
+  interface IChatResponse {
+    id: string;
+    sender: string;
+    message: string;
+    version: number;
+    date: number;
+  }
 
-  if (apiResult.ok) {
-    return apiResult.data;
+  const apiResult: ApiSuccessResult<IChatResponse[]> | ApiErrorResult = await get<
+    IChatResponse[]
+  >(`chats/${roomId}/`);
+
+  if (apiResult.ok && apiResult.data) {
+    return Array.from(apiResult.data).map(it => {
+      return {
+        id: it.id,
+        sender: it.sender,
+        image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+        message: it.message,
+        version: it.version,
+        date: new Date(it.date * 1000),
+      } as IChat
+    })
   } else {
     return [];
   }
 };
+
+export const fetchChatHistory = async (chatId: string, roomId: string = "channel"): Promise<IChat[]> => {
+  interface IChatHistoryResponse {
+    id: string;
+    sender: string;
+    message: string;
+    version: number;
+    date: number;
+  }
+
+  const apiResult: ApiSuccessResult<IChatHistoryResponse[]> | ApiErrorResult = await get<
+    IChatHistoryResponse[]
+  >(`chats/${roomId}/${chatId}/history/`);
+
+  if (apiResult.ok) {
+    return Array.from(apiResult.data).map(it => {
+      return {
+        id: it.id,
+        sender: it.sender,
+        image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+        message: it.message,
+        version: it.version,
+        date: new Date(it.date * 1000),
+      } as IChat
+    })
+  } else {
+    return [];
+  }
+}
 
 export const postChat = async (chat: IPostChat) => {
   const apiResult: ApiSuccessResult<IPostChat> | ApiErrorResult = await post<
