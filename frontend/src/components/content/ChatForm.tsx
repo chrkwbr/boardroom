@@ -30,22 +30,20 @@ const ChatForm = (
   };
 
   return (
-    <div className="py-2">
+    <div className="p-2">
       <form onSubmit={onSubmit}>
-        <div className="flex justify-center">
-          <div className="grid grid-cols-12 w-full">
-            <div className="col-span-10 px-1">
-              <textarea
-                className="textarea textarea-primary w-full"
-                onChange={handleChatChange}
-                onKeyDown={handleKeyDown}
-                value={chat}
-              >
-              </textarea>
-            </div>
-            <div className="col-span-2 px-1">
-              <button className="btn btn-primary">Send</button>
-            </div>
+        <div className="flex flex-col border border-primary/50 rounded-lg shadow-lg">
+          <div className="flex-1 justify-between items-center">
+            <textarea
+              className="textarea textarea-primary w-full"
+              onChange={handleChatChange}
+              onKeyDown={handleKeyDown}
+              value={chat}
+            >
+            </textarea>
+          </div>
+          <div className="flex justify-end">
+            <button className="btn btn-primary">Send</button>
           </div>
         </div>
       </form>

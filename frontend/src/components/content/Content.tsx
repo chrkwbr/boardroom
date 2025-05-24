@@ -123,14 +123,11 @@ const Content = () => {
   }, [data]);
 
   return (
-    <div className="flex flex-col flex-1 bg-base-100">
-      <div
-        className="h-0 flex-1 overflow-y-auto"
-        style={{ maxHeight: "calc(100vh - 10rem)" }}
-      >
+    <div className="flex flex-col h-full">
+      <div className="flex-1 overflow-y-auto">
         <Chats data={data} />
       </div>
-      <div className="sticky bottom-0 left-0 right-0 bg-base-100">
+      <div className="flex-none">
         <ChatForm onSend={handleSend} defaultText="" />
       </div>
     </div>

@@ -1,10 +1,10 @@
 import './App.css'
-import Sidebar from "./components/Sidebar.tsx"
+import MainPanel from './components/MainPanel.tsx'
 
 const App = () => {
   return (
     <div data-theme="">
-      <Sidebar />
+      <MainPanel />
     </div>
   )
 }

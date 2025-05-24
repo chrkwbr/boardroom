@@ -127,7 +127,7 @@ const Chat = (props: { chat: IChat }) => {
                     type="button"
                     className="btn btn-sm btn-outline btn-secondary"
                   >
-                    Cancel Edit
+                    Cancel
                   </button>
                 </li>
               )

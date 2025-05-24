@@ -1,33 +1,84 @@
-import MainPanel from "./MainPanel.tsx";
-
 const Sidebar = () => {
   return (
-    <div className="drawer lg:drawer-open">
-      <input id="my-drawer" type="checkbox" className="drawer-toggle" />
-      <div className="drawer-content flex flex-col items-center justify-center">
-        <MainPanel />
-      </div>
-      <div className="drawer-side bg-base-200 overflow-auto">
-        <div className="p-3">
-          <h1 className="mx-1 font-bold">
-            <span className="text-3xl">Boardroom</span>
-          </h1>
-        </div>
-        <label
-          htmlFor="my-drawer"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        >
-        </label>
-        <ul className="menu text-base-content w-80 p-4">
-          <li>
-            <a>Sidebar Item 1</a>
-          </li>
-          <li>
-            <a>Sidebar Item 2</a>
-          </li>
-        </ul>
-      </div>
+    <div className="bg-base-200 md:w-64 overflow-y-scroll sm:w-screen">
+      <ul className="flex flex-col list-reset sm:hidden md:block">
+        <li className="block">
+          <a
+            href="#"
+            className="no-underline block h-full w-full px-8 py-4 hover:text-orange"
+          >
+            <i className="fa fa-tachometer mr-2" aria-hidden="true"></i>
+            Dashboard
+          </a>
+        </li>
+        <li className="flex justify-between">
+          <a
+            href="#"
+            className="no-underline block h-full w-full px-8 py-4 hover:text-orange"
+          >
+            <i className="fa fa-user mr-2" aria-hidden="true"></i>
+            Account
+            <i className="fa fa-angle-right float-right" aria-hidden="true">
+            </i>
+          </a>
+        </li>
+        <li className="block">
+          <a
+            href="#"
+            className="no-underline block h-full w-full px-8 py-4 hover:text-orange"
+          >
+            <i className="fa fa-envelope mr-2" aria-hidden="true"></i>
+            MailBox
+            <i className="fa fa-angle-down float-right" aria-hidden="true">
+            </i>
+          </a>
+          <ul className="flex flex-col list-reset bg-orange-darkest">
+            <li className="flex">
+              <a
+                href="#"
+                className="no-underline block h-full w-full ml-4 hover:text-orange px-8 py-4"
+              >
+                <i className="fa fa-envelope-o mr-2" aria-hidden="true"></i>
+                Inbox
+              </a>
+            </li>
+            <li className="flex">
+              <a
+                href="#"
+                className="no-underline block h-full w-full ml-4 hover:text-orange px-8 py-4"
+              >
+                <i className="fa fa-envelope-o mr-2" aria-hidden="true"></i>
+                Categories
+                <i
+                  className="fa fa-angle-down float-right"
+                  aria-hidden="true"
+                >
+                </i>
+              </a>
+            </li>
+            <ul className="flex flex-col list-reset bg-orange-darkest">
+              <li className="flex">
+                <a
+                  href="#"
+                  className="no-underline block h-full w-full ml-8 hover:text-orange px-8 py-4"
+                >
+                  <i className="fa fa-envelope-o mr-2" aria-hidden="true"></i>
+                  Social
+                </a>
+              </li>
+              <li className="flex">
+                <a
+                  href="#"
+                  className="no-underline block h-full w-full ml-8 hover:text-orange px-8 py-4"
+                >
+                  <i className="fa fa-envelope-o mr-2" aria-hidden="true"></i>
+                  Notifications
+                </a>
+              </li>
+            </ul>
+          </ul>
+        </li>
+      </ul>
     </div>
   );
 };
