@@ -1,6 +1,7 @@
 import Sidebar from "./Sidebar.tsx";
 import Content from "./content/Content.tsx";
 import Header from "./header/Header.tsx";
+import { Route, Routes } from "react-router-dom";
 
 const MainPanel = () => {
   return (
@@ -12,7 +13,12 @@ const MainPanel = () => {
         <div className="flex sm:flex-col md:flex-row w-full">
           <Sidebar />
           <div className="px-1 flex-grow flex-shrink">
-            <Content />
+            <Routes>
+              <Route
+                path="/:roomId"
+                element={<Content />}
+              />
+            </Routes>
           </div>
         </div>
       </div>

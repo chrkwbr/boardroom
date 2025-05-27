@@ -1,17 +1,31 @@
-import Chats from "./Chats.tsx";
+import ChatTimeline from "./ChatTimeline.tsx";
 import ChatForm from "./ChatForm.tsx";
 import {ChatEvent, fetchChats, IChat, IPostChat, postChat} from "./IChats.ts";
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState, useContext, createContext} from "react";
+import { useParams } from "react-router-dom";
+
+export const RoomContext = createContext<string | null>(null);
+
+export const useRoomId = () => {
+  const roomId = useContext(RoomContext);
+  if (!roomId) {
+    throw new Error("RoomContext is not provided");
+  }
+  return roomId;
+}
 
 const Content = () => {
+  const { roomId } = useParams<{ roomId: string }>();
   const [data, setData] = useState<IChat[]>([]);
   const dataRef = useRef<IChat[]>([]);
   const socketRef = useRef<WebSocket>(null);
   const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
+    if (!roomId) return;
+
     (async () => {
-      const d: IChat[] = await fetchChats();
+      const d: IChat[] = await fetchChats(roomId);
       if (!d) return;
       dataRef.current = d;
       setData(d);
@@ -23,7 +37,7 @@ const Content = () => {
     }
 
     console.log("WebSocket接続を開始します...");
-    const socket = new WebSocket("ws://localhost:8080/ws/chats/channel/");
+    const socket = new WebSocket(`ws://localhost:8080/ws/chats/${roomId}/`);
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
@@ -75,7 +89,7 @@ const Content = () => {
         socketRef.current.close();
       }
     };
-  }, []);
+  }, [roomId ?? ""]);
 
   const addChat = (chat: IChat) => {
     if (chat.id && dataRef.current.some((c) => c.id === chat.id)) {
@@ -116,22 +130,27 @@ const Content = () => {
       const newChat: IPostChat = {
         id: null,
         sender: "You",
+        room: roomId!,
         message: chat,
       };
       await postChat(newChat);
     })();
   }, [data]);
 
-  return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto">
-        <Chats data={data} />
-      </div>
-      <div className="flex-none">
-        <ChatForm onSend={handleSend} defaultText="" />
-      </div>
-    </div>
-  );
+  return(
+    roomId ? (
+      <RoomContext.Provider value={roomId}>
+        <div className="flex flex-col h-full">
+          <div className="flex-1 overflow-y-auto">
+            <ChatTimeline data={data}/>
+          </div>
+          <div className="flex-none">
+            <ChatForm onSend={handleSend} defaultText=""/>
+          </div>
+        </div>
+      </RoomContext.Provider>
+    ) : (<></>))
+
 };
 
 export default Content;

@@ -1,13 +1,15 @@
 import {useState} from "react";
 import {fetchChatHistory, IChat} from "./IChats.ts";
 import Chat from "./Chat.tsx";
+import {useRoomId} from './Content.tsx'
 
 const CHatEditHistory = (props: { chatId: string }) => {
   const [data, setData] = useState<IChat[]>([]);
+  const roomId = useRoomId();
 
   const handleShowHistory = () => {
     (async () => {
-      const chatHistory: IChat[] = await fetchChatHistory(props.chatId);
+      const chatHistory: IChat[] = await fetchChatHistory(props.chatId, roomId);
       if (!chatHistory) return;
       setData(chatHistory);
     })();

@@ -20,6 +20,8 @@
     "daisyui": "npm:daisyui@^5.0.28",
     "react": "npm:react@^19.0.0",
     "react-dom": "npm:react-dom@^19.0.0",
+    "react-router": "npm:react-router@^7.6.1",
+    "react-router-dom": "npm:react-router-dom@^7.6.1",
     "tailwindcss": "npm:tailwindcss@^4.1.4",
     "vite": "npm:vite@^6.1.1"
   }

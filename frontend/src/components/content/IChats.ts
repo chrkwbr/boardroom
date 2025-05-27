@@ -12,6 +12,7 @@ export interface IChat {
 export interface IPostChat {
   id: string | null;
   sender: string;
+  room: string;
   message: string;
 }
 
@@ -27,7 +28,9 @@ export interface ChatEvent {
   timestamp: number
 }
 
-export const fetchChats: () => Promise<IChat[]> = async (roomId: string = "channel") => {
+export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
+  roomId: string,
+) => {
   interface IChatResponse {
     id: string;
     sender: string;
@@ -56,7 +59,10 @@ export const fetchChats: () => Promise<IChat[]> = async (roomId: string = "chann
   }
 };
 
-export const fetchChatHistory = async (chatId: string, roomId: string = "channel"): Promise<IChat[]> => {
+export const fetchChatHistory = async (
+  chatId: string,
+  roomId: string,
+): Promise<IChat[]> => {
   interface IChatHistoryResponse {
     id: string;
     sender: string;
@@ -89,7 +95,7 @@ export const postChat = async (chat: IPostChat) => {
   const apiResult: ApiSuccessResult<IPostChat> | ApiErrorResult = await post<
     IPostChat,
     IPostChat
-  >("chats/channel/", chat);
+  >(`chats/${chat.room}/`, chat);
 
   if (apiResult.ok) {
     return apiResult.data;
@@ -103,7 +109,7 @@ export const updateChat = async (chat: IPostChat) => {
   const apiResult: ApiSuccessResult<IPostChat> | ApiErrorResult = await post<
     IPostChat,
     IPostChat
-  >(`chats/channel/${chat.id}`, chat);
+  >(`chats/${chat.room}/${chat.id}`, chat);
 
   if (apiResult.ok) {
     return apiResult.data;
@@ -116,7 +122,7 @@ export const updateChat = async (chat: IPostChat) => {
 export const deleteChat = async (chat: IPostChat) => {
   const apiResult: ApiSuccessResult<string> | ApiErrorResult = await del<
     string
-  >(`chats/channel/${chat.id}`);
+  >(`chats/${chat.room}/${chat.id}`);
 
   if (apiResult.ok) {
     return apiResult.data;

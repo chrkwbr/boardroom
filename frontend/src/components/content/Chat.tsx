@@ -5,9 +5,11 @@ import ChatForm from "./ChatForm.tsx";
 import Dialog from "../modal/dialog.tsx";
 import {formatDateToIsoDateTime} from "../../util/date_helper.ts";
 import CHatEditHistory from "./CHatEditHistory.tsx";
+import {useRoomId} from './Content.tsx'
 
 const Chat = (props: { chat: IChat }) => {
   const [editing, setEditing] = useState(false);
+  const roomId = useRoomId()
 
   const startEdit = () => {
     setEditing(true);
@@ -34,6 +36,7 @@ const Chat = (props: { chat: IChat }) => {
       const toDelete: IPostChat = {
         id: props.chat.id,
         sender: "You",
+        room: roomId,
         message: "",
       };
       await deleteChat(toDelete);
@@ -45,6 +48,7 @@ const Chat = (props: { chat: IChat }) => {
       const newChat: IPostChat = {
         id: props.chat.id,
         sender: "You",
+        room: roomId,
         message: chat,
       };
       await updateChat(newChat);
