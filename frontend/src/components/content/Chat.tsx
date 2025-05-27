@@ -1,15 +1,15 @@
 // deno-lint-ignore-file ban-ts-comment
-import {useCallback, useState} from "react";
-import {deleteChat, IChat, IPostChat, updateChat} from "./IChats.ts";
+import { useCallback, useState } from "react";
+import { deleteChat, IChat, IPostChat, updateChat } from "./IChats.ts";
 import ChatForm from "./ChatForm.tsx";
 import Dialog from "../modal/dialog.tsx";
-import {formatDateToIsoDateTime} from "../../util/date_helper.ts";
+import { formatDateToIsoDateTime } from "../../util/date_helper.ts";
 import CHatEditHistory from "./CHatEditHistory.tsx";
-import {useRoomId} from './Content.tsx'
+import { useRoomId } from "./Content.tsx";
 
 const Chat = (props: { chat: IChat }) => {
   const [editing, setEditing] = useState(false);
-  const roomId = useRoomId()
+  const roomId = useRoomId();
 
   const startEdit = () => {
     setEditing(true);

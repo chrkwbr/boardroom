@@ -1,5 +1,5 @@
-import {getNotifications, INotification} from "./INotification.ts";
-import {useEffect, useState} from "react";
+import { getNotifications, INotification } from "./INotification.ts";
+import { useEffect, useState } from "react";
 
 const Notifications = () => {
   const [notifications, setNotifications] = useState<INotification[]>([]);

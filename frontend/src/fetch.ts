@@ -76,7 +76,7 @@ export const del = async <T>(
       },
     };
   }
-}
+};
 
 const handleResponse = async <T>(response: Response): Promise<ApiResult<T>> => {
   const isJson = response.headers.get("content-type")?.includes(

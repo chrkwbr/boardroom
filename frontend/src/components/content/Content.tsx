@@ -1,7 +1,14 @@
 import ChatTimeline from "./ChatTimeline.tsx";
 import ChatForm from "./ChatForm.tsx";
-import {ChatEvent, fetchChats, IChat, IPostChat, postChat} from "./IChats.ts";
-import {useCallback, useEffect, useRef, useState, useContext, createContext} from "react";
+import { ChatEvent, fetchChats, IChat, IPostChat, postChat } from "./IChats.ts";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useParams } from "react-router-dom";
 
 export const RoomContext = createContext<string | null>(null);
@@ -12,7 +19,7 @@ export const useRoomId = () => {
     throw new Error("RoomContext is not provided");
   }
   return roomId;
-}
+};
 
 const Content = () => {
   const { roomId } = useParams<{ roomId: string }>();
@@ -56,17 +63,17 @@ const Content = () => {
           message: chatEvent.message,
           version: chatEvent.version,
           date: new Date(chatEvent.timestamp * 1000),
-        }
+        };
         switch (eventData.event_type) {
           case "chat_created":
             addChat(chat);
-            break
+            break;
           case "chat_edited":
             editChat(chat);
-            break
+            break;
           case "chat_deleted":
             deleteChat(chat);
-            break
+            break;
         }
       } catch (error) {
         console.error("メッセージの解析に失敗:", error);
@@ -94,36 +101,36 @@ const Content = () => {
   const addChat = (chat: IChat) => {
     if (chat.id && dataRef.current.some((c) => c.id === chat.id)) {
       console.log("skip duplicated", chat.id);
-      return
+      return;
     }
     const updatedData = [...dataRef.current, chat];
     dataRef.current = updatedData;
     setData(updatedData);
-  }
+  };
 
   const editChat = (chat: IChat) => {
     const index = dataRef.current.findIndex((c) => c.id === chat.id);
     if (index === -1) {
       console.log("skip not found", chat.id);
-      return
+      return;
     }
     const updatedData = [...dataRef.current];
     updatedData[index] = chat;
     dataRef.current = updatedData;
     setData([...updatedData]);
-  }
+  };
 
   const deleteChat = (chat: IChat) => {
     const index = dataRef.current.findIndex((c) => c.id === chat.id);
     if (index === -1) {
       console.log("skip not found", chat.id);
-      return
+      return;
     }
     const updatedData = [...dataRef.current];
     updatedData.splice(index, 1);
     dataRef.current = updatedData;
     setData([...updatedData]);
-  }
+  };
 
   const handleSend = useCallback((chat: string) => {
     (async () => {
@@ -137,20 +144,22 @@ const Content = () => {
     })();
   }, [data]);
 
-  return(
-    roomId ? (
-      <RoomContext.Provider value={roomId}>
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-y-auto">
-            <ChatTimeline data={data}/>
+  return (
+    roomId
+      ? (
+        <RoomContext.Provider value={roomId}>
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-y-auto">
+              <ChatTimeline data={data} />
+            </div>
+            <div className="flex-none">
+              <ChatForm onSend={handleSend} defaultText="" />
+            </div>
           </div>
-          <div className="flex-none">
-            <ChatForm onSend={handleSend} defaultText=""/>
-          </div>
-        </div>
-      </RoomContext.Provider>
-    ) : (<></>))
-
+        </RoomContext.Provider>
+      )
+      : <></>
+  );
 };
 
 export default Content;

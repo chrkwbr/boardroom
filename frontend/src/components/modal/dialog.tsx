@@ -15,7 +15,9 @@ const Dialog = (
         <div className="modal-action">
           <form method="dialog">
             <button className="btn">Cancel</button>
-            <button className="btn btn-warning" onClick={handleDelete}>Delete</button>
+            <button className="btn btn-warning" onClick={handleDelete}>
+              Delete
+            </button>
           </form>
         </div>
       </div>

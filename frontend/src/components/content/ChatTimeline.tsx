@@ -1,6 +1,6 @@
 import Chat from "./Chat.tsx";
-import {IChat} from "./IChats.ts";
-import {useLayoutEffect, useRef} from "react";
+import { IChat } from "./IChats.ts";
+import { useLayoutEffect, useRef } from "react";
 
 const ChatTimeline = (props: { data: IChat[] }) => {
   const endOfMessages = useRef<HTMLDivElement>(null);

@@ -1,4 +1,10 @@
-import {ApiErrorResult, ApiSuccessResult, del, get, post} from "../../fetch.ts";
+import {
+  ApiErrorResult,
+  ApiSuccessResult,
+  del,
+  get,
+  post,
+} from "../../fetch.ts";
 
 export interface IChat {
   id: string | null;
@@ -19,13 +25,13 @@ export interface IPostChat {
 type EventType = "chat_created" | "chat_edited" | "chat_deleted";
 
 export interface ChatEvent {
-  id: string
-  event_type: EventType
-  sender: string
-  room: string
-  message: string
-  version: number
-  timestamp: number
+  id: string;
+  event_type: EventType;
+  sender: string;
+  room: string;
+  message: string;
+  version: number;
+  timestamp: number;
 }
 
 export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
@@ -39,12 +45,13 @@ export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
     date: number;
   }
 
-  const apiResult: ApiSuccessResult<IChatResponse[]> | ApiErrorResult = await get<
-    IChatResponse[]
-  >(`chats/${roomId}/`);
+  const apiResult: ApiSuccessResult<IChatResponse[]> | ApiErrorResult =
+    await get<
+      IChatResponse[]
+    >(`chats/${roomId}/`);
 
   if (apiResult.ok && apiResult.data) {
-    return Array.from(apiResult.data).map(it => {
+    return Array.from(apiResult.data).map((it) => {
       return {
         id: it.id,
         sender: it.sender,
@@ -52,8 +59,8 @@ export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
         message: it.message,
         version: it.version,
         date: new Date(it.date * 1000),
-      } as IChat
-    })
+      } as IChat;
+    });
   } else {
     return [];
   }
@@ -71,12 +78,13 @@ export const fetchChatHistory = async (
     date: number;
   }
 
-  const apiResult: ApiSuccessResult<IChatHistoryResponse[]> | ApiErrorResult = await get<
-    IChatHistoryResponse[]
-  >(`chats/${roomId}/${chatId}/history/`);
+  const apiResult: ApiSuccessResult<IChatHistoryResponse[]> | ApiErrorResult =
+    await get<
+      IChatHistoryResponse[]
+    >(`chats/${roomId}/${chatId}/history/`);
 
   if (apiResult.ok) {
-    return Array.from(apiResult.data).map(it => {
+    return Array.from(apiResult.data).map((it) => {
       return {
         id: it.id,
         sender: it.sender,
@@ -84,12 +92,12 @@ export const fetchChatHistory = async (
         message: it.message,
         version: it.version,
         date: new Date(it.date * 1000),
-      } as IChat
-    })
+      } as IChat;
+    });
   } else {
     return [];
   }
-}
+};
 
 export const postChat = async (chat: IPostChat) => {
   const apiResult: ApiSuccessResult<IPostChat> | ApiErrorResult = await post<
@@ -130,4 +138,4 @@ export const deleteChat = async (chat: IPostChat) => {
     alert(`Error: ${apiResult.data.message}`);
     return null;
   }
-}
+};
