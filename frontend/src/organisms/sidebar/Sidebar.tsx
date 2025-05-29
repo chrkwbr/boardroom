@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { IChat } from "../room/IChats.ts";
 
 type Room = {
   id: string;
@@ -7,10 +8,20 @@ type Room = {
   url: string;
 };
 
-const Sidebar = () => {
+export interface SidebarChatHandlers {
+  addChat: (chat: IChat) => void;
+}
+
+type SidebarProps = {
+  onRegister: (handlers: SidebarChatHandlers) => void;
+};
+
+const Sidebar = (props: SidebarProps) => {
   const [data, setData] = useState<Room[]>([]);
 
   useEffect(() => {
+    props.onRegister({ addChat });
+
     setData([
       {
         id: "1",
@@ -24,6 +35,10 @@ const Sidebar = () => {
       },
     ]);
   }, []);
+
+  const addChat = (chat: IChat) => {
+    console.log("Sidebar addChat = " + chat);
+  };
 
   return (
     <div className="bg-base-200 md:w-52 overflow-y-scroll sm:w-screen">

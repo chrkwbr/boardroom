@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { fetchChatHistory, IChat } from "./IChats.ts";
 import Chat from "./Chat.tsx";
-import {useRoomId} from './Content.tsx'
+import { useRoomId } from "./ChatRoom.tsx";
 
 const CHatEditHistory = (props: { chatId: string }) => {
   const [data, setData] = useState<IChat[]>([]);

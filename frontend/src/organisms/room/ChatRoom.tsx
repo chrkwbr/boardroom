@@ -1,6 +1,6 @@
 import ChatTimeline from "./ChatTimeline.tsx";
 import ChatForm from "./ChatForm.tsx";
-import { ChatEvent, fetchChats, IChat, IPostChat, postChat } from "./IChats.ts";
+import { fetchChats, IChat, IPostChat, postChat } from "./IChats.ts";
 import {
   createContext,
   useCallback,
@@ -21,15 +21,24 @@ export const useRoomId = () => {
   return roomId;
 };
 
-const Content = () => {
+export interface ChatHandlers {
+  addChat: (chat: IChat) => void;
+  editChat: (chat: IChat) => void;
+  deleteChat: (chat: IChat) => void;
+}
+
+type ChatRoomProps = {
+  onRegister: (roomId: string, handlers: ChatHandlers) => void;
+};
+
+const ChatRoom = (props: ChatRoomProps) => {
   const { roomId } = useParams<{ roomId: string }>();
   const [data, setData] = useState<IChat[]>([]);
   const dataRef = useRef<IChat[]>([]);
-  const socketRef = useRef<WebSocket>(null);
-  const [socketConnected, setSocketConnected] = useState(false);
 
   useEffect(() => {
     if (!roomId) return;
+    props.onRegister(roomId, { addChat, editChat, deleteChat });
 
     (async () => {
       const d: IChat[] = await fetchChats(roomId);
@@ -37,66 +46,7 @@ const Content = () => {
       dataRef.current = d;
       setData(d);
     })();
-
-    if (socketRef.current) {
-      console.log("既存のWebSocket接続をクローズ中...");
-      socketRef.current.close();
-    }
-
-    console.log("WebSocket接続を開始します...");
-    const socket = new WebSocket(`ws://localhost:8080/ws/chats/${roomId}/`);
-    socketRef.current = socket;
-
-    socket.addEventListener("open", () => {
-      console.log("WebSocket接続確立");
-      setSocketConnected(true);
-    });
-
-    socket.addEventListener("message", (event: MessageEvent) => {
-      try {
-        const eventData = JSON.parse(event.data);
-        const chatEvent = eventData satisfies ChatEvent;
-        const chat: IChat = {
-          id: chatEvent.id,
-          sender: chatEvent.sender,
-          image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
-          message: chatEvent.message,
-          version: chatEvent.version,
-          date: new Date(chatEvent.timestamp * 1000),
-        };
-        switch (eventData.event_type) {
-          case "chat_created":
-            addChat(chat);
-            break;
-          case "chat_edited":
-            editChat(chat);
-            break;
-          case "chat_deleted":
-            deleteChat(chat);
-            break;
-        }
-      } catch (error) {
-        console.error("メッセージの解析に失敗:", error);
-      }
-    });
-
-    socket.addEventListener("error", (event) => {
-      console.error("WebSocketエラー:", event);
-    });
-
-    socket.addEventListener("close", () => {
-      console.log("closed WebSocket");
-      setSocketConnected(false);
-    });
-
-    return () => {
-      if (
-        socketRef.current && socketRef.current.readyState === WebSocket.OPEN
-      ) {
-        socketRef.current.close();
-      }
-    };
-  }, [roomId ?? ""]);
+  }, [roomId]);
 
   const addChat = (chat: IChat) => {
     if (chat.id && dataRef.current.some((c) => c.id === chat.id)) {
@@ -162,4 +112,4 @@ const Content = () => {
   );
 };
 
-export default Content;
+export default ChatRoom;

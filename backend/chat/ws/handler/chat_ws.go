@@ -27,9 +27,9 @@ var upgrader = websocket.Upgrader{
 }
 
 func (ws *ChatWebSocket) RegisterRoutes(r *gin.RouterGroup) {
-	chatGroup := r.Group("/chats")
+	chatGroup := r.Group("/")
 	{
-		chatGroup.GET("/:channelId/", func(c *gin.Context) {
+		chatGroup.GET("", func(c *gin.Context) {
 			ws.handleWebSocketChat(c)
 		})
 	}
