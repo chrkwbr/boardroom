@@ -12,6 +12,7 @@ export interface IChat {
   image: string;
   message: string;
   version: number;
+  room: string;
   date: Date;
 }
 
@@ -58,6 +59,7 @@ export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
         image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
         message: it.message,
         version: it.version,
+        room: roomId,
         date: new Date(it.date * 1000),
       } as IChat;
     });
@@ -91,6 +93,7 @@ export const fetchChatHistory = async (
         image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
         message: it.message,
         version: it.version,
+        room: roomId,
         date: new Date(it.date * 1000),
       } as IChat;
     });

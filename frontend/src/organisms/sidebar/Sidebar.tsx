@@ -1,44 +1,38 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { IChat } from "../room/IChats.ts";
+import { IChat } from "../chat/IChats.ts";
+import { EventEmitter } from "../../util/EventEmitter.ts";
+import { fetchRooms, IRoom } from "./IRooms.ts";
 
-type Room = {
-  id: string;
-  name: string;
-  url: string;
-};
-
-export interface SidebarChatHandlers {
-  addChat: (chat: IChat) => void;
-}
-
-type SidebarProps = {
-  onRegister: (handlers: SidebarChatHandlers) => void;
-};
-
-const Sidebar = (props: SidebarProps) => {
-  const [data, setData] = useState<Room[]>([]);
+const Sidebar = () => {
+  const [data, setData] = useState<IRoom[]>([]);
 
   useEffect(() => {
-    props.onRegister({ addChat });
+    const addChatListener = (event: { roomId: string; chat: IChat }) => {
+      setData((prev) =>
+        prev.map((room: IRoom) => {
+          if (room.id === event.roomId) {
+            return {
+              ...room,
+              unreadCount: (room.unreadCount || 0) + 1,
+            };
+          }
+          return room;
+        })
+      );
+    };
+    EventEmitter.on("chat_created", addChatListener);
 
-    setData([
-      {
-        id: "1",
-        name: "Room 1",
-        url: "/room1",
-      },
-      {
-        id: "2",
-        name: "Room 2",
-        url: "/room2",
-      },
-    ]);
+    (async () => {
+      const rooms = await fetchRooms();
+      if (!rooms) return;
+      setData(rooms);
+    })();
+
+    return () => {
+      EventEmitter.off("chat_created", addChatListener);
+    };
   }, []);
-
-  const addChat = (chat: IChat) => {
-    console.log("Sidebar addChat = " + chat);
-  };
 
   return (
     <div className="bg-base-200 md:w-52 overflow-y-scroll sm:w-screen">
@@ -49,7 +43,14 @@ const Sidebar = (props: SidebarProps) => {
             <ul>
               {data.map((room) => (
                 <li key={room.id}>
-                  <Link to={room.url}>{room.name}</Link>
+                  <Link to={room.id}>
+                    {room.name}{" "}
+                    {room.unreadCount !== undefined && room.unreadCount > 0 && (
+                      <div className="badge badge-xs badge-secondary">
+                        {room.unreadCount}
+                      </div>
+                    )}
+                  </Link>
                 </li>
               ))}
             </ul>

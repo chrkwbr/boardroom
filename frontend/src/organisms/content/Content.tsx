@@ -1,24 +1,13 @@
-import Sidebar, { SidebarChatHandlers } from "../sidebar/Sidebar.tsx";
+import Sidebar from "../sidebar/Sidebar.tsx";
 import { Route, Routes } from "react-router-dom";
-import ChatRoom, { ChatHandlers } from "../room/ChatRoom.tsx";
-import { ChatEvent, IChat } from "../room/IChats.ts";
+import ChatRoom from "../chat/ChatRoom.tsx";
+import { ChatEvent, IChat } from "../chat/IChats.ts";
 import { useWebSocket } from "../../util/WebSocketProvider.tsx";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+import { EventEmitter } from "../../util/EventEmitter.ts";
 
 const Content = () => {
   const socket = useWebSocket();
-  const roomHandlers = useRef<
-    Record<string, ChatHandlers>
-  >({});
-  const sidebarHandlers = useRef<SidebarChatHandlers>(null);
-
-  const registerRoomHandlers = (roomId: string, handlers: ChatHandlers) => {
-    roomHandlers.current[roomId] = handlers;
-  };
-
-  const registerSidebarHandlers = (handler: SidebarChatHandlers) => {
-    sidebarHandlers.current = handler;
-  };
 
   useEffect(() => {
     const chatHandler = (event: MessageEvent) => {
@@ -31,18 +20,27 @@ const Content = () => {
           image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
           message: chatEvent.message,
           version: chatEvent.version,
+          room: chatEvent.room,
           date: new Date(chatEvent.timestamp * 1000),
         };
         switch (eventData.event_type) {
           case "chat_created":
-            roomHandlers.current[chatEvent.room]?.addChat(chat);
-            sidebarHandlers.current?.addChat(chat);
+            EventEmitter.emit("chat_created", {
+              roomId: chatEvent.room,
+              chat: chat,
+            });
             break;
           case "chat_edited":
-            roomHandlers.current[chatEvent.room]?.editChat(chat);
+            EventEmitter.emit("chat_edited", {
+              roomId: chatEvent.room,
+              chat: chat,
+            });
             break;
           case "chat_deleted":
-            roomHandlers.current[chatEvent.room]?.deleteChat(chat);
+            EventEmitter.emit("chat_deleted", {
+              roomId: chatEvent.room,
+              chat: chat,
+            });
             break;
         }
       } catch (error) {
@@ -59,12 +57,12 @@ const Content = () => {
 
   return (
     <div className="flex sm:flex-col md:flex-row w-full">
-      <Sidebar onRegister={registerSidebarHandlers} />
+      <Sidebar />
       <div className="px-1 flex-grow flex-shrink">
         <Routes>
           <Route
             path="/:roomId"
-            element={<ChatRoom onRegister={registerRoomHandlers} />}
+            element={<ChatRoom />}
           />
         </Routes>
       </div>

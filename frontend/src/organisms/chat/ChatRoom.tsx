@@ -10,6 +10,7 @@ import {
   useState,
 } from "react";
 import { useParams } from "react-router-dom";
+import { EventEmitter } from "../../util/EventEmitter.ts";
 
 export const RoomContext = createContext<string | null>(null);
 
@@ -21,24 +22,30 @@ export const useRoomId = () => {
   return roomId;
 };
 
-export interface ChatHandlers {
-  addChat: (chat: IChat) => void;
-  editChat: (chat: IChat) => void;
-  deleteChat: (chat: IChat) => void;
-}
-
-type ChatRoomProps = {
-  onRegister: (roomId: string, handlers: ChatHandlers) => void;
-};
-
-const ChatRoom = (props: ChatRoomProps) => {
+const ChatRoom = () => {
   const { roomId } = useParams<{ roomId: string }>();
   const [data, setData] = useState<IChat[]>([]);
   const dataRef = useRef<IChat[]>([]);
 
   useEffect(() => {
     if (!roomId) return;
-    props.onRegister(roomId, { addChat, editChat, deleteChat });
+    const addChatListener = (event: { roomId: string; chat: IChat }) => {
+      if (event.roomId !== roomId) return;
+      addChat(event.chat);
+    };
+    EventEmitter.on("chat_created", addChatListener);
+
+    const editChatListener = (event: { roomId: string; chat: IChat }) => {
+      if (event.roomId !== roomId) return;
+      editChat(event.chat);
+    };
+    EventEmitter.on("chat_edited", editChatListener);
+
+    const deleteChatListener = (event: { roomId: string; chat: IChat }) => {
+      if (event.roomId !== roomId) return;
+      deleteChat(event.chat);
+    };
+    EventEmitter.on("chat_deleted", deleteChatListener);
 
     (async () => {
       const d: IChat[] = await fetchChats(roomId);
@@ -46,6 +53,12 @@ const ChatRoom = (props: ChatRoomProps) => {
       dataRef.current = d;
       setData(d);
     })();
+
+    return () => {
+      EventEmitter.off("chat_created", addChatListener);
+      EventEmitter.off("chat_edited", editChatListener);
+      EventEmitter.off("chat_deleted", deleteChatListener);
+    };
   }, [roomId]);
 
   const addChat = (chat: IChat) => {
