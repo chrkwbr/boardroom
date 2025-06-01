@@ -4,7 +4,7 @@ import {
   del,
   get,
   post,
-} from "../../fetch.ts";
+} from "../../util/fetch.ts";
 
 export interface IChat {
   id: string | null;

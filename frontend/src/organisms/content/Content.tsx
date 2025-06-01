@@ -50,7 +50,6 @@ const Content = () => {
 
     socket.addEventListener("message", chatHandler);
     return () => {
-      console.log("Removing chat handler");
       socket.removeEventListener("message", chatHandler);
     };
   }, [socket]);

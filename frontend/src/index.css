@@ -1,4 +1,19 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: cupcake --default, dracula --prefersdark;
+  themes:
+    cupcake --default,
+    dracula --prefersdark cyberpunk --dark,
+    light,
+    dark,
+    corporate,
+    business,
+    retro,
+    synthwave,
+    fantasy,
+    cyberpunk,
+    valentine,
+    halloween,
+    garden,
+    forest,
+    winter;
 }

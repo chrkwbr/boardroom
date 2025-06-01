@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { IChat } from "../chat/IChats.ts";
-import { EventEmitter } from "../../util/EventEmitter.ts";
 import { fetchRooms, IRoom } from "./IRooms.ts";
+import { EventEmitter } from "../../util/EventEmitter.ts";
+import { IChat } from "../chat/IChats.ts";
 
 const Sidebar = () => {
   const [data, setData] = useState<IRoom[]>([]);
@@ -34,6 +34,17 @@ const Sidebar = () => {
     };
   }, []);
 
+  const handleRoomClick = (roomId: string) => {
+    setData((prev: IRoom[]) =>
+      prev.map((room: IRoom) => {
+        if (room.id === roomId) {
+          return { ...room, selected: true };
+        }
+        return { ...room, selected: false };
+      })
+    );
+  };
+
   return (
     <div className="bg-base-200 md:w-52 overflow-y-scroll sm:w-screen">
       <ul className="menu rounded-box">
@@ -42,7 +53,13 @@ const Sidebar = () => {
             <summary>Parent</summary>
             <ul>
               {data.map((room) => (
-                <li key={room.id}>
+                <li
+                  key={room.id}
+                  onClick={() => handleRoomClick(room.id)}
+                  className={room.selected
+                    ? "font-bold text-secondary bg-secondary-content"
+                    : ""}
+                >
                   <Link to={room.id}>
                     {room.name}{" "}
                     {room.unreadCount !== undefined && room.unreadCount > 0 && (
