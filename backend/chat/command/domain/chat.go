@@ -3,8 +3,9 @@ package domain
 import (
 	"backend/chat/event"
 	"encoding/json"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Chat struct {

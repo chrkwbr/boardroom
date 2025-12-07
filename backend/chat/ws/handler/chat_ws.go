@@ -5,12 +5,13 @@ import (
 	"backend/chat/event"
 	"backend/infra/hub"
 	"encoding/json"
-	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type ChatWebSocket struct {
