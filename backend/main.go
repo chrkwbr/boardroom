@@ -11,7 +11,6 @@ import (
 	"backend/chat/query/service"
 	wschat "backend/chat/ws/handler"
 	"backend/chat/ws/processor"
-	tx "backend/infra/db"
 	"backend/infra/pubsub/kafka"
 	"database/sql"
 	"log"
@@ -47,9 +46,10 @@ func main() {
 
 	chatCommandApi := chatCommandApi.NewChatCommandController(
 		usecase.NewChatUseCase(
-			persistence2.NewChatRepositoryImpl(),
-			persistence2.NewChatOutboxRepositoryImpl(),
-			tx.NewTransactionManager(ChatDB),
+			eventPublisher,
+			//persistence2.NewChatRepositoryImpl(),
+			//persistence2.NewChatOutboxRepositoryImpl(),
+			//tx.NewTransactionManager(ChatDB),
 		),
 	)
 	chatReadModelRepository := repository.NewChatReadModelRepository(RedisClient)

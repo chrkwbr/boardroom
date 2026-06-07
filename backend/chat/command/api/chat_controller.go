@@ -2,10 +2,11 @@ package api
 
 import (
 	"backend/chat/command/usecase"
-	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ChatCommandController struct {
@@ -19,9 +20,9 @@ func NewChatCommandController(chatUseCase *usecase.ChatUseCase) *ChatCommandCont
 }
 
 type ChatRequest struct {
-	ID      string `json:"id"`
-	Sender  string `json:"sender"`
-	Message string `json:"message"`
+	ID       string `json:"id"`
+	SenderID string `json:"sender"`
+	Message  string `json:"message"`
 }
 
 func (con *ChatCommandController) RegisterRoutes(r *gin.RouterGroup) {
@@ -40,7 +41,18 @@ func (con *ChatCommandController) postChat(c *gin.Context) {
 		return
 	}
 
-	if err := con.chatUseCase.CreateChat(newChat.Sender, c.Param("roomId"), newChat.Message); err != nil {
+	senderID, err := uuid.Parse(newChat.SenderID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "sender must be a valid UUID"})
+		return
+	}
+
+	roomID, err := uuid.Parse(c.Param("roomId"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
+	}
+
+	if err := con.chatUseCase.CreateChat(senderID, roomID, newChat.Message); err != nil {
 		log.Println("Error creating chat:", err)
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
 		return
