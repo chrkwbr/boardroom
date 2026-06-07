@@ -14,11 +14,12 @@ import (
 	tx "backend/infra/db"
 	"backend/infra/pubsub/kafka"
 	"database/sql"
+	"log"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 	"github.com/redis/go-redis/v9"
-	"log"
 )
 
 var (
@@ -98,7 +99,7 @@ func Init() {
 		DB:       0,  // use default DB
 	})
 
-	cdb, err := sql.Open("postgres", "host=localhost port=5432 user=boardroom password=boardroom dbname=boardroom search_path=chat sslmode=disable")
+	cdb, err := sql.Open("postgres", "host=localhost port=5433 user=boardroom password=boardroom dbname=boardroom search_path=chat sslmode=disable")
 	if err != nil {
 		panic(err)
 	}
