@@ -19,17 +19,11 @@ func NewChatReadModelRepository(redisClient *redis.Client) *ChatReadModelReposit
 	}
 }
 
-const (
-	formatChatKey    = "chat:%s"
-	formatHistoryKey = "chats:%v:history" // chats:${chatId}:history
-	formatCHatIdsKey = "chats:%v"         // chats:${roomId}
-)
-
 // Chat
 func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string) ([]*readmodel.ChatReadModel, error) {
 	keys := make([]string, len(chatIds))
 	for i, chatId := range chatIds {
-		keys[i] = fmt.Sprintf(formatChatKey, chatId)
+		keys[i] = fmt.Sprintf(readmodel.FormatChatKey, chatId)
 	}
 
 	results, err := r.redis.MGet(ctx, keys...).Result()
@@ -52,7 +46,7 @@ func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string
 }
 
 func (r *ChatReadModelRepository) ZRevRangeRoomChatIds(ctx context.Context, roomId string, start, end int64) ([]string, error) {
-	chatRoomKey := fmt.Sprintf(formatCHatIdsKey, roomId)
+	chatRoomKey := fmt.Sprintf(readmodel.FormatCHatIdsKey, roomId)
 	chatIds, err := r.redis.ZRevRange(ctx, chatRoomKey, start, end).Result()
 	if err != nil {
 		return nil, err
@@ -63,7 +57,7 @@ func (r *ChatReadModelRepository) ZRevRangeRoomChatIds(ctx context.Context, room
 // History
 
 func (r *ChatReadModelRepository) LRangeHistory(ctx context.Context, chatId string) ([]*readmodel.ChatReadModel, error) {
-	chatHistoryKey := fmt.Sprintf(formatHistoryKey, chatId)
+	chatHistoryKey := fmt.Sprintf(readmodel.FormatHistoryKey, chatId)
 	result, err := r.redis.LRange(ctx, chatHistoryKey, 0, -1).Result()
 	if err != nil {
 		return nil, err

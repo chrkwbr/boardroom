@@ -4,9 +4,9 @@ import (
 	chatCommandApi "backend/chat/command/api"
 	"backend/chat/command/usecase"
 	chatqueryApi "backend/chat/query/api"
-	processor3 "backend/chat/query/processor"
 	"backend/chat/query/repository"
 	"backend/chat/query/service"
+	"backend/chat/readmodel"
 	wschat "backend/chat/ws/handler"
 	"backend/chat/ws/processor"
 	"backend/infra/pubsub/kafka"
@@ -70,7 +70,8 @@ func main() {
 	chatWs.RegisterRoutes(ws)
 
 	subscriberRedisConstructor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_constructor")
-	processor3.NewRedisConstructor(subscriberRedisConstructor, chatReadModelRepository).Start()
+	readmodelRedis := readmodel.NewChatRedisRepository(RedisClient)
+	readmodel.NewRedisConstructor(subscriberRedisConstructor, readmodelRedis).Start()
 
 	defer func() {
 		if err := ChatDB.Close(); err != nil {

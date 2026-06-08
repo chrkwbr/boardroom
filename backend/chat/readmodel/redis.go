@@ -21,14 +21,14 @@ func NewChatRedisRepository(redisClient *redis.Client) *ChatRedisRepository {
 }
 
 const (
-	formatChatKey    = "chat:message:%s"
-	formatHistoryKey = "chat:room:%v:timeline"
-	formatCHatIdsKey = "chat:message:%v:history"
+	FormatChatKey    = "chat:message:%s"
+	FormatHistoryKey = "chat:room:%v:timeline"
+	FormatCHatIdsKey = "chat:message:%v:history"
 )
 
 // Chat
 func (r *ChatRedisRepository) GetChat(ctx context.Context, chatId uuid.UUID) (*ChatReadModel, error) {
-	result, err := r.redis.Get(ctx, fmt.Sprintf(formatChatKey, chatId)).Result()
+	result, err := r.redis.Get(ctx, fmt.Sprintf(FormatChatKey, chatId)).Result()
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +40,7 @@ func (r *ChatRedisRepository) GetChat(ctx context.Context, chatId uuid.UUID) (*C
 }
 
 func (r *ChatRedisRepository) SetChat(ctx context.Context, model *ChatReadModel) error {
-	key := fmt.Sprintf(formatChatKey, model.ID)
+	key := fmt.Sprintf(FormatChatKey, model.ID)
 	payload, err := json.Marshal(model)
 	if err != nil {
 		return err
@@ -53,7 +53,7 @@ func (r *ChatRedisRepository) SetChat(ctx context.Context, model *ChatReadModel)
 }
 
 //	func (r *ChatRedisRepository) SetArgsChat(ctx context.Context, chatEvent *domain.ChatEvent) (*query.ChatReadModel, error) {
-//		key := fmt.Sprintf(formatChatKey, chatEvent.ID)
+//		key := fmt.Sprintf(FormatChatKey, chatEvent.ID)
 //		readModel, err := query.FromPayload(chatEvent)
 //		if err != nil {
 //			return nil, err
@@ -80,7 +80,7 @@ func (r *ChatRedisRepository) SetChat(ctx context.Context, model *ChatReadModel)
 //	}
 
 func (r *ChatRedisRepository) DelChat(ctx context.Context, chatId uuid.UUID) error {
-	key := fmt.Sprintf(formatChatKey, chatId)
+	key := fmt.Sprintf(FormatChatKey, chatId)
 	if err := r.redis.Del(ctx, key).Err(); err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (r *ChatRedisRepository) DelChat(ctx context.Context, chatId uuid.UUID) err
 
 // Room Chat IDs
 func (r *ChatRedisRepository) ZAddNXRoomChatIds(ctx context.Context, model *ChatReadModel) error {
-	chatRoomKey := fmt.Sprintf(formatCHatIdsKey, model.RoomID)
+	chatRoomKey := fmt.Sprintf(FormatCHatIdsKey, model.RoomID)
 	z := redis.Z{
 		Score:  float64(model.CreatedAt),
 		Member: fmt.Sprintf("%s", model.ID),
@@ -101,7 +101,7 @@ func (r *ChatRedisRepository) ZAddNXRoomChatIds(ctx context.Context, model *Chat
 }
 
 func (r *ChatRedisRepository) ZRemRoomChatIds(ctx context.Context, roomId string, chatId uuid.UUID) error {
-	chatRoomKey := fmt.Sprintf(formatCHatIdsKey, roomId)
+	chatRoomKey := fmt.Sprintf(FormatCHatIdsKey, roomId)
 	if err := r.redis.ZRem(ctx, chatRoomKey, fmt.Sprintf("%s", chatId)).Err(); err != nil {
 		return err
 	}
@@ -114,12 +114,12 @@ func (r *ChatRedisRepository) LPushHistory(ctx context.Context, model *ChatReadM
 	if err != nil {
 		return err
 	}
-	r.redis.LPush(ctx, fmt.Sprintf(formatHistoryKey, model.ID), m)
+	r.redis.LPush(ctx, fmt.Sprintf(FormatHistoryKey, model.ID), m)
 	return nil
 }
 
 func (r *ChatRedisRepository) DelHistory(ctx context.Context, chatId uuid.UUID) error {
-	chatHistoryKey := fmt.Sprintf(formatHistoryKey, chatId)
+	chatHistoryKey := fmt.Sprintf(FormatHistoryKey, chatId)
 	if err := r.redis.Del(ctx, chatHistoryKey).Err(); err != nil {
 		return err
 	}
