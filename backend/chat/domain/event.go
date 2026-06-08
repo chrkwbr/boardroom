@@ -28,3 +28,7 @@ type ChatEditedPayload struct {
 	ID      uuid.UUID `json:"id"`
 	Message string    `json:"message"`
 }
+
+type ChatDeletedPayload struct {
+	ID uuid.UUID `json:"id"`
+}
