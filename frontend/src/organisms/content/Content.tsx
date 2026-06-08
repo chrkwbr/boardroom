@@ -24,19 +24,19 @@ const Content = () => {
           date: new Date(chatEvent.timestamp * 1000),
         };
         switch (eventData.event_type) {
-          case "chat_created":
+          case "created":
             EventEmitter.emit("chat_created", {
               roomId: chatEvent.room,
               chat: chat,
             });
             break;
-          case "chat_edited":
+          case "updated":
             EventEmitter.emit("chat_edited", {
               roomId: chatEvent.room,
               chat: chat,
             });
             break;
-          case "chat_deleted":
+          case "deleted":
             EventEmitter.emit("chat_deleted", {
               roomId: chatEvent.room,
               chat: chat,

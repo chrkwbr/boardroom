@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -46,20 +47,21 @@ func NewChat(sender User, room Room, message string) *Chat {
 //}
 
 func (c *Chat) NewCreatedEvent() *ChatEvent {
-	//jsonChat, err := json.Marshal(c)
-	//if err != nil {
-	//	panic(err)
-	//}
+	payload := ChatCreatedPayload{
+		ID:       c.ID,
+		RoomID:   c.Room.ID,
+		SenderID: c.Sender.ID,
+		Message:  c.Message,
+		Version:  c.Version,
+	}
+	jsonChat, err := json.Marshal(payload)
+	if err != nil {
+		panic(err)
+	}
 	return &ChatEvent{
 		Type:       EventTypeCreated,
 		OccurredAt: c.Timestamp,
-		Payload: ChatCreatedEvent{
-			ID:       c.ID,
-			RoomID:   c.Room.ID,
-			SenderID: c.Sender.ID,
-			Message:  c.Message,
-			Version:  c.Version,
-		},
+		Payload:    jsonChat,
 	}
 }
 
@@ -70,7 +72,7 @@ func (c *Chat) NewCreatedEvent() *ChatEvent {
 //	}
 //	return ChatEvent{
 //		ChatId:    c.ID,
-//		EventType: ChatEditedEvent,
+//		EventType: ChatEditedPayload,
 //		Version:   c.Version,
 //		Payload:   jsonChat,
 //		Timestamp: time.Now().Unix(),

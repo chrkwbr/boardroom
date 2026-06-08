@@ -23,7 +23,7 @@ export interface IPostChat {
   message: string;
 }
 
-type EventType = "chat_created" | "chat_edited" | "chat_deleted";
+type EventType = "created" | "updated" | "deleted";
 
 export interface ChatEvent {
   id: string;

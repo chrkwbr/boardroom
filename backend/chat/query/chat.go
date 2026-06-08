@@ -1,8 +1,7 @@
 package query
 
 import (
-	"backend/chat/command/domain"
-	"backend/chat/event"
+	"backend/chat/domain"
 	"encoding/json"
 )
 
@@ -24,18 +23,18 @@ type ChatReadModel struct {
 	UpdatedAt int64
 }
 
-func FromPayload(chatEvent *event.ChatEvent) (*ChatReadModel, error) {
+func FromPayload(chatEvent *domain.ChatEvent) (*ChatReadModel, error) {
 	chat := &domain.Chat{}
 	if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
 		return nil, err
 	}
 	return &ChatReadModel{
-		ID:        chat.ID.String(),
-		Sender:    chat.Sender,
-		Room:      chat.Room,
-		Message:   chat.Message,
-		Version:   chat.Version,
-		CreatedAt: chat.Timestamp,
-		UpdatedAt: chatEvent.Timestamp,
+		//ID:        chat.ID.String(),
+		//Sender:    chat.Sender,
+		//Room:      chat.Room,
+		//Message:   chat.Message,
+		//Version:   chat.Version,
+		//CreatedAt: chat.Timestamp,
+		//UpdatedAt: chatEvent.Timestamp,
 	}, nil
 }

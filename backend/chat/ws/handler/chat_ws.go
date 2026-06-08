@@ -1,10 +1,10 @@
 package handler
 
 import (
-	"backend/chat/command/domain"
-	"backend/chat/event"
+	"backend/chat/domain"
 	"backend/infra/hub"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -19,6 +19,16 @@ type ChatWebSocket struct {
 
 func NewChatWebSocket() *ChatWebSocket {
 	return &ChatWebSocket{}
+}
+
+type WsChatEvent struct {
+	ChatId    string `json:"id"`
+	EventType string `json:"event_type"`
+	Sender    string `json:"sender"`
+	Room      string `json:"room"`
+	Message   string `json:"message"`
+	Version   int64  `json:"version"`
+	Timestamp int64  `json:"timestamp"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -94,28 +104,35 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	}()
 
 	go client.Receive(func(msg []byte) {
-		chatEvent := &event.ChatEvent{}
-		if err := json.Unmarshal(msg, chatEvent); err != nil {
-			log.Println("Failed to unmarshal chat:", err)
-			return
-		}
-		chat := &domain.Chat{}
-		if err := json.Unmarshal(chatEvent.Payload, chat); err != nil {
+		var chatEvent domain.ChatEvent
+		if err := json.Unmarshal(msg, &chatEvent); err != nil {
 			log.Println("Failed to unmarshal chat:", err)
 			return
 		}
 
-		wsChat := &WsChatEvent{
-			ChatId:    chatEvent.ChatId.String(),
-			EventType: chatEvent.EventType,
-			Sender:    chat.Sender,
-			Room:      chat.Room,
-			Message:   chat.Message,
-			Version:   chat.Version,
-			Timestamp: chat.Timestamp,
+		var wsChatEvent = &WsChatEvent{}
+		fmt.Printf("Received chat event: %+v\n", chatEvent)
+
+		switch chatEvent.Type {
+		case domain.EventTypeCreated:
+			var payload domain.ChatCreatedPayload
+			if err := json.Unmarshal(chatEvent.Payload, &payload); err != nil {
+				log.Println("Failed to unmarshal chat:", err)
+				return
+			}
+			wsChatEvent = &WsChatEvent{
+				ChatId:    payload.ID.String(),
+				EventType: string(chatEvent.Type),
+				Sender:    payload.SenderID.String(),
+				Room:      payload.RoomID.String(),
+				Timestamp: chatEvent.OccurredAt,
+			}
+		default:
+			log.Println("Unknown event type:", chatEvent.Type)
+			return
 		}
 
-		if err := conn.WriteJSON(wsChat); err != nil {
+		if err := conn.WriteJSON(wsChatEvent); err != nil {
 			log.Println("WebSocket write error:", err)
 			return
 		}

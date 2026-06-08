@@ -1,10 +1,11 @@
 package usecase
 
 import (
-	"backend/chat/command/domain"
+	"backend/chat/domain"
 	//"backend/infra/db"
 	//"backend/infra/hub"
 	"backend/infra/pubsub"
+	"encoding/json"
 
 	"github.com/google/uuid"
 )
@@ -43,8 +44,12 @@ func (uc *ChatUseCase) CreateChat(senderID uuid.UUID, roomID uuid.UUID, message 
 
 	chat := domain.NewChat(user, room, message)
 	event := chat.NewCreatedEvent()
+	eventJSON, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
 	// 同じキーを持つイベントは同じパーティションに順番保証されるので、キーは Room
-	if err := uc.publisher.Publish("chat-events", roomID.String(), event.Payload); err != nil {
+	if err := uc.publisher.Publish("chat-events", roomID.String(), eventJSON); err != nil {
 		return err
 	}
 	//if err := uc.txManager.RunWithTx(func(tx *sql.Tx) error {

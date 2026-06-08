@@ -16,7 +16,7 @@ type ChatEvent struct {
 	Payload    []byte    `json:"payload"`
 }
 
-type ChatCreatedEvent struct {
+type ChatCreatedPayload struct {
 	ID       uuid.UUID `json:"id"`
 	RoomID   uuid.UUID `json:"room_id"`
 	SenderID uuid.UUID `json:"sender_id"`
@@ -24,7 +24,7 @@ type ChatCreatedEvent struct {
 	Version  int64     `json:"version"`
 }
 
-type ChatEditedEvent struct {
+type ChatEditedPayload struct {
 	ID      uuid.UUID `json:"id"`
 	Message string    `json:"message"`
 }
