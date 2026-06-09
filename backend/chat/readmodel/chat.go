@@ -1,13 +1,15 @@
 package readmodel
 
+import "github.com/google/uuid"
+
 type ChatReadModel struct {
-	ID        string
-	Sender    User
-	RoomID    string
-	Message   string
-	Version   int64
-	CreatedAt int64
-	UpdatedAt int64
+	ID        uuid.UUID `json:"id"`
+	Sender    User      `json:"sender"`
+	RoomID    uuid.UUID `json:"roomId"`
+	Message   string    `json:"message"`
+	Version   int64     `json:"version"`
+	CreatedAt int64     `json:"createdAt"`
+	UpdatedAt int64     `json:"updatedAt"`
 }
 
 func (c *ChatReadModel) NewUpdate(message string, occurredAt int64) (*ChatReadModel, error) {

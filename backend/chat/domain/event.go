@@ -30,5 +30,6 @@ type ChatEditedPayload struct {
 }
 
 type ChatDeletedPayload struct {
-	ID uuid.UUID `json:"id"`
+	ID     uuid.UUID `json:"id"`
+	RoomID uuid.UUID `json:"room_id"`
 }

@@ -8,12 +8,18 @@ import {
 
 export interface IChat {
   id: string | null;
-  sender: string;
-  image: string;
+  sender: ISender;
+  roomId: string;
   message: string;
   version: number;
-  room: string;
-  date: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ISender {
+  id: string;
+  name: string;
+  icon: string;
 }
 
 export interface IPostChat {
@@ -35,17 +41,19 @@ export interface ChatEvent {
   timestamp: number;
 }
 
+interface IChatResponse {
+  id: string | null;
+  sender: ISender;
+  roomId: string;
+  message: string;
+  version: number;
+  createdAt: number
+  updatedAt: number;
+}
+
 export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
   roomId: string,
 ) => {
-  interface IChatResponse {
-    id: string;
-    sender: string;
-    message: string;
-    version: number;
-    date: number;
-  }
-
   const apiResult: ApiSuccessResult<IChatResponse[]> | ApiErrorResult =
     await get<
       IChatResponse[]
@@ -55,12 +63,12 @@ export const fetchChats: (roomId: string) => Promise<IChat[]> = async (
     return Array.from(apiResult.data).map((it) => {
       return {
         id: it.id,
+        roomId: it.roomId,
         sender: it.sender,
-        image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
         message: it.message,
         version: it.version,
-        room: roomId,
-        date: new Date(it.date * 1000),
+        createdAt: new Date(it.createdAt),
+        updatedAt: new Date(it.updatedAt),
       } as IChat;
     });
   } else {
@@ -72,29 +80,19 @@ export const fetchChatHistory = async (
   chatId: string,
   roomId: string,
 ): Promise<IChat[]> => {
-  interface IChatHistoryResponse {
-    id: string;
-    sender: string;
-    message: string;
-    version: number;
-    date: number;
-  }
-
-  const apiResult: ApiSuccessResult<IChatHistoryResponse[]> | ApiErrorResult =
-    await get<
-      IChatHistoryResponse[]
-    >(`chats/${roomId}/${chatId}/history/`);
+  const apiResult: ApiSuccessResult<IChatResponse[]> | ApiErrorResult =
+    await get<IChatResponse[]>(`chats/${roomId}/${chatId}/history/`);
 
   if (apiResult.ok) {
     return Array.from(apiResult.data).map((it) => {
       return {
         id: it.id,
+        roomId: it.roomId,
         sender: it.sender,
-        image: "https://img.daisyui.com/images/profile/demo/1@94.webp",
         message: it.message,
         version: it.version,
-        room: roomId,
-        date: new Date(it.date * 1000),
+        createdAt: new Date(it.createdAt),
+        updatedAt: new Date(it.updatedAt),
       } as IChat;
     });
   } else {

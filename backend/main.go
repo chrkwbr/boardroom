@@ -62,8 +62,8 @@ func main() {
 	//apinotification.RegisterRoutes(api)
 
 	// == Chat WebSocket ==
-	subscriberWebsocketProcessor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "websocket_processor")
-	processor.NewWsChatEventPusher(subscriberWebsocketProcessor).Start()
+	//subscriberWebsocketProcessor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "websocket_processor")
+	processor.NewChatRedisSubscriber(RedisClient).Start()
 
 	ws := r.Group("/ws")
 	chatWs := wschat.NewChatWebSocket()
@@ -84,7 +84,7 @@ func main() {
 		}
 
 		eventPublisher.Close()
-		subscriberWebsocketProcessor.Close()
+		//subscriberWebsocketProcessor.Close()
 		subscriberRedisConstructor.Close()
 	}()
 

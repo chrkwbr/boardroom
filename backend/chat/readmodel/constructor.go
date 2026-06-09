@@ -63,16 +63,17 @@ func (rc *RedisConstructor) createReadModel(ctx context.Context, event *domain.C
 		log.Println("Failed to unmarshal chat:", err)
 		return
 	}
+	// ToDo get From Redis
 	s := User{
 		ID:   chat.SenderID,
 		Name: "test name",
-		Icon: "test icon",
+		Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
 	}
 
 	r := &ChatReadModel{
-		ID:        chat.ID.String(),
+		ID:        chat.ID,
 		Sender:    s,
-		RoomID:    chat.RoomID.String(),
+		RoomID:    chat.RoomID,
 		Message:   chat.Message,
 		Version:   chat.Version,
 		CreatedAt: event.OccurredAt,
@@ -81,6 +82,13 @@ func (rc *RedisConstructor) createReadModel(ctx context.Context, event *domain.C
 
 	if err := rc.repo.SetChat(ctx, r); err != nil {
 		log.Println("Failed to save chat read model:", err)
+		return
+	}
+
+	e := NewChatCreatedEvent(*r)
+
+	if err := rc.repo.PublishChatEvent(ctx, r.RoomID, e); err != nil {
+		log.Println("Failed to publish chat event:", err)
 		return
 	}
 
@@ -114,6 +122,14 @@ func (rc *RedisConstructor) updateReadModel(ctx context.Context, chatEvent *doma
 		log.Println("Failed to update chat read model:", err)
 		return
 	}
+
+	e := NewChatEditedEvent(*edited)
+
+	if err := rc.repo.PublishChatEvent(ctx, edited.RoomID, e); err != nil {
+		log.Println("Failed to publish chat event:", err)
+		return
+	}
+
 	if err := rc.repo.LPushHistory(ctx, edited); err != nil {
 		log.Println("Failed to push chat history:", err)
 		return
@@ -130,6 +146,13 @@ func (rc *RedisConstructor) DeleteReadModel(ctx context.Context, chatEvent *doma
 	orig, err := rc.repo.GetChat(ctx, p.ID)
 	if err != nil {
 		log.Println("Failed to get chat:", err)
+		return
+	}
+
+	e := NewChatDeletedEvent(p.ID, p.RoomID)
+
+	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
+		log.Println("Failed to publish chat event:", err)
 		return
 	}
 

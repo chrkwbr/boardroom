@@ -21,9 +21,10 @@ func NewChatRedisRepository(redisClient *redis.Client) *ChatRedisRepository {
 }
 
 const (
-	FormatChatKey    = "chat:message:%s"
-	FormatHistoryKey = "chat:room:%v:timeline"
-	FormatCHatIdsKey = "chat:message:%v:history"
+	FormatChatKey     = "chat:message:%s"
+	FormatHistoryKey  = "chat:room:%v:timeline"
+	FormatCHatIdsKey  = "chat:message:%v:history"
+	FormatChatChannel = "chat:room:%s:updates"
 )
 
 // Chat
@@ -47,6 +48,18 @@ func (r *ChatRedisRepository) SetChat(ctx context.Context, model *ChatReadModel)
 	}
 
 	if err := r.redis.Set(ctx, key, payload, time.Hour*24*10).Err(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *ChatRedisRepository) PublishChatEvent(ctx context.Context, roomId uuid.UUID, event *ChatRedisEvent) error {
+	payload, err := json.Marshal(event)
+	if err != nil {
+		return err
+	}
+	channel := fmt.Sprintf(FormatChatChannel, roomId)
+	if err := r.redis.Publish(ctx, channel, payload).Err(); err != nil {
 		return err
 	}
 	return nil
@@ -100,7 +113,7 @@ func (r *ChatRedisRepository) ZAddNXRoomChatIds(ctx context.Context, model *Chat
 	return nil
 }
 
-func (r *ChatRedisRepository) ZRemRoomChatIds(ctx context.Context, roomId string, chatId uuid.UUID) error {
+func (r *ChatRedisRepository) ZRemRoomChatIds(ctx context.Context, roomId uuid.UUID, chatId uuid.UUID) error {
 	chatRoomKey := fmt.Sprintf(FormatCHatIdsKey, roomId)
 	if err := r.redis.ZRem(ctx, chatRoomKey, fmt.Sprintf("%s", chatId)).Err(); err != nil {
 		return err

@@ -1,10 +1,9 @@
 package handler
 
 import (
-	"backend/chat/domain"
+	"backend/chat/readmodel"
 	"backend/infra/hub"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"sync"
@@ -22,13 +21,10 @@ func NewChatWebSocket() *ChatWebSocket {
 }
 
 type WsChatEvent struct {
-	ChatId    string `json:"id"`
-	EventType string `json:"event_type"`
-	Sender    string `json:"sender"`
-	Room      string `json:"room"`
-	Message   string `json:"message"`
-	Version   int64  `json:"version"`
-	Timestamp int64  `json:"timestamp"`
+	EventType readmodel.EventType     `json:"event_type"`
+	RoomId    string                  `json:"room_id"`
+	ChatId    string                  `json:"chat_id"`
+	Chat      readmodel.ChatReadModel `json:"chat"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -104,31 +100,37 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	}()
 
 	go client.Receive(func(msg []byte) {
-		var chatEvent domain.ChatEvent
-		if err := json.Unmarshal(msg, &chatEvent); err != nil {
-			log.Println("Failed to unmarshal chat:", err)
-			return
+		e := &readmodel.ChatRedisEvent{}
+		if err := json.Unmarshal(msg, e); err != nil {
+			log.Println("Unmarshal err:", err)
 		}
 
 		var wsChatEvent = &WsChatEvent{}
-		fmt.Printf("Received chat event: %+v\n", chatEvent)
+		log.Println("Received chat event:", string(msg))
 
-		switch chatEvent.Type {
-		case domain.EventTypeCreated:
-			var payload domain.ChatCreatedPayload
-			if err := json.Unmarshal(chatEvent.Payload, &payload); err != nil {
-				log.Println("Failed to unmarshal chat:", err)
-				return
-			}
+		switch e.Type {
+		case readmodel.EventTypeCreated:
 			wsChatEvent = &WsChatEvent{
-				ChatId:    payload.ID.String(),
-				EventType: string(chatEvent.Type),
-				Sender:    payload.SenderID.String(),
-				Room:      payload.RoomID.String(),
-				Timestamp: chatEvent.OccurredAt,
+				EventType: e.Type,
+				RoomId:    e.Payload.RoomID.String(),
+				ChatId:    e.Payload.ID.String(),
+				Chat:      *e.Payload,
+			}
+		case readmodel.EventTypeUpdated:
+			wsChatEvent = &WsChatEvent{
+				EventType: e.Type,
+				RoomId:    e.Payload.RoomID.String(),
+				ChatId:    e.Payload.ID.String(),
+				Chat:      *e.Payload,
+			}
+		case readmodel.EventTypeDeleted:
+			wsChatEvent = &WsChatEvent{
+				EventType: e.Type,
+				RoomId:    e.Payload.RoomID.String(),
+				ChatId:    e.Payload.ID.String(),
 			}
 		default:
-			log.Println("Unknown event type:", chatEvent.Type)
+			log.Println("Unknown event type:", e.Type)
 			return
 		}
 
