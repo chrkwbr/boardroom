@@ -106,7 +106,6 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 		}
 
 		var wsChatEvent = &WsChatEvent{}
-		log.Println("Received chat event:", string(msg))
 
 		switch e.Type {
 		case readmodel.EventTypeCreated:
