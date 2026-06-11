@@ -1,35 +1,42 @@
 package service
 
 import (
-	"backend/internal/chat/query/repository"
 	"backend/internal/chat/readmodel"
 	"context"
-	"slices"
+
+	"github.com/google/uuid"
 )
 
-type ChatService struct {
-	repository *repository.ChatReadModelRepository
+type ChatQueryRepository interface {
+	ListMessagesByRoom(ctx context.Context, roomID uuid.UUID, limit int) ([]*readmodel.ChatReadModel, error)
 }
 
-func NewChatService(repository *repository.ChatReadModelRepository) *ChatService {
+type ChatService struct {
+	repository ChatQueryRepository
+}
+
+func NewChatService(repository ChatQueryRepository) *ChatService {
 	return &ChatService{
 		repository: repository,
 	}
 }
 
 func (s *ChatService) ListMessage(ctx context.Context, room string) ([]*readmodel.ChatReadModel, error) {
-	chatIds, err := s.repository.ZRevRangeRoomChatIds(ctx, room, 0, 99)
+	roomID, err := uuid.Parse(room)
 	if err != nil {
 		return nil, err
 	}
-	if len(chatIds) == 0 {
+	result, err := s.repository.ListMessagesByRoom(ctx, roomID, 100)
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
 		return make([]*readmodel.ChatReadModel, 0), nil
 	}
-	slices.Reverse(chatIds)
-
-	return s.repository.MGetChat(ctx, chatIds)
+	return result, nil
 }
 
+// GetHistory は編集履歴を返します。ScyllaDB への移行は未対応のため空を返します。
 func (s *ChatService) GetHistory(ctx context.Context, room string, chatId string) ([]*readmodel.ChatReadModel, error) {
-	return s.repository.LRangeHistory(ctx, chatId)
+	return make([]*readmodel.ChatReadModel, 0), nil
 }

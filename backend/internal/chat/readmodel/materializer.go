@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type Materializer struct {
@@ -22,12 +23,20 @@ func NewMaterializer(sub pubsub.EventSubscriber, scylla *ChatScyllaRepository) *
 
 func (m *Materializer) Start() {
 	go func() {
-		if err := m.subscriber.Subscribe("_", func(key string, value []byte) error {
-			m.process(context.Background(), value)
-			return nil
-		}); err != nil {
-			log.Panicln("Failed to subscribe to event:", err)
+		const maxRetries = 10
+		for i := range maxRetries {
+			err := m.subscriber.Subscribe("_", func(key string, value []byte) error {
+				m.process(context.Background(), value)
+				return nil
+			})
+			if err == nil {
+				return
+			}
+			wait := time.Duration(i+1) * 3 * time.Second
+			log.Printf("Materializer: subscribe failed (attempt %d/%d): %v — retrying in %s", i+1, maxRetries, err, wait)
+			time.Sleep(wait)
 		}
+		log.Println("===== Materializer: gave up after max retries")
 	}()
 }
 

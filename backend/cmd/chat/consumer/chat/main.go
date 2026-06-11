@@ -10,7 +10,7 @@ import (
 )
 
 func main() {
-	log.Println("Starting consumer-kafka-chat...")
+	log.Println("==== Starting consumer-kafka-chat...")
 
 	scylla, err := readmodel.NewChatScyllaRepository("localhost")
 	if err != nil {
@@ -23,11 +23,11 @@ func main() {
 
 	readmodel.NewMaterializer(kafkaReader, scylla).Start()
 
-	log.Println("Consumer started. Waiting for events...")
+	log.Println("==== Consumer started. Waiting for events...")
 
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("Shutting down consumer-kafka-chat...")
+	log.Println("===== Shutting down consumer-kafka-chat...")
 }

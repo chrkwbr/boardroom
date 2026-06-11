@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"time"
 )
 
 type RedisConstructor struct {
@@ -22,12 +23,20 @@ func NewRedisConstructor(sub pubsub.EventSubscriber, repo *ChatRedisRepository) 
 
 func (rc *RedisConstructor) Start() {
 	go func() {
-		if err := rc.subscriber.Subscribe("_", func(key string, value []byte) error {
-			rc.process(context.Background(), value)
-			return nil
-		}); err != nil {
-			log.Panicln("Failed to subscribe to event:", err)
+		const maxRetries = 10
+		for i := range maxRetries {
+			err := rc.subscriber.Subscribe("_", func(key string, value []byte) error {
+				rc.process(context.Background(), value)
+				return nil
+			})
+			if err == nil {
+				return
+			}
+			wait := time.Duration(i+1) * 3 * time.Second
+			log.Printf("Failed to subscribe (attempt %d/%d): %v — retrying in %s", i+1, maxRetries, err, wait)
+			time.Sleep(wait)
 		}
+		log.Println("RedisConstructor: gave up after max retries")
 	}()
 }
 

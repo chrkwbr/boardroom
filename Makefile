@@ -16,11 +16,11 @@ z_run-consumer-chat:
 
 run-backend:
 	trap 'kill 0' SIGINT SIGTERM EXIT; \
-	$(MAKE) z_run-command & \
-	$(MAKE) z_run-query & \
-	$(MAKE) z_run-ws & \
-	$(MAKE) z_run-consumer-notifier & \
-	$(NAME) z_run-consumer-chat & \
+	($(MAKE) z_run-command 2>&1 | sed 's/^/[command-api] /') & \
+	($(MAKE) z_run-query 2>&1 | sed 's/^/[query-api]  /') & \
+	($(MAKE) z_run-ws 2>&1 | sed 's/^/[ws]         /') & \
+	($(MAKE) z_run-consumer-notifier 2>&1 | sed 's/^/[notifier]  /') & \
+	($(MAKE) z_run-consumer-chat 2>&1 | sed 's/^/[consumer]  /') & \
 	wait
 
 kill-backend:

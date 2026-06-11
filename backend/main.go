@@ -50,9 +50,12 @@ func main() {
 			//tx.NewTransactionManager(ChatDB),
 		),
 	)
-	chatReadModelRepository := repository.NewChatReadModelRepository(RedisClient)
+	scylla, err := readmodel.NewChatScyllaRepository("localhost")
+	if err != nil {
+		log.Fatal("Failed to connect to ScyllaDB:", err)
+	}
 	chatQueryApi := chatqueryApi.NewChatQueryController(
-		service.NewChatService(chatReadModelRepository),
+		service.NewChatService(repository.NewChatScyllaQueryRepository(scylla)),
 	)
 
 	api := r.Group("/api")
