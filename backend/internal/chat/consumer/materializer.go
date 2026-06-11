@@ -1,7 +1,8 @@
-package readmodel
+package consumer
 
 import (
 	"backend/internal/chat/domain"
+	"backend/internal/chat/readmodel"
 	"backend/internal/shared/infra/pubsub"
 	"context"
 	"encoding/json"
@@ -11,10 +12,10 @@ import (
 
 type Materializer struct {
 	subscriber pubsub.EventSubscriber
-	scylla     *ChatScyllaRepository
+	scylla     *readmodel.ChatScyllaRepository
 }
 
-func NewMaterializer(sub pubsub.EventSubscriber, scylla *ChatScyllaRepository) *Materializer {
+func NewMaterializer(sub pubsub.EventSubscriber, scylla *readmodel.ChatScyllaRepository) *Materializer {
 	return &Materializer{
 		subscriber: sub,
 		scylla:     scylla,
@@ -36,7 +37,6 @@ func (m *Materializer) Start() {
 			log.Printf("Materializer: subscribe failed (attempt %d/%d): %v — retrying in %s", i+1, maxRetries, err, wait)
 			time.Sleep(wait)
 		}
-		log.Println("===== Materializer: gave up after max retries")
 	}()
 }
 
@@ -67,9 +67,9 @@ func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
 	}
 
 	// ToDo: sender 情報は将来的に User サービスから取得
-	model := &ChatReadModel{
+	model := &readmodel.ChatReadModel{
 		ID: p.ID,
-		Sender: User{
+		Sender: readmodel.User{
 			ID:   p.SenderID,
 			Name: "test name",
 			Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",

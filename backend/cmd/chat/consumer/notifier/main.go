@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/chat/consumer"
 	"backend/internal/chat/readmodel"
 	"backend/internal/shared/infra/pubsub/kafka"
 	"log"
@@ -20,7 +21,7 @@ func main() {
 	// Kafka → Redis read model 構築
 	k := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_pubsub")
 	r := readmodel.NewChatRedisRepository(RedisClient)
-	readmodel.NewRedisConstructor(k, r).Start()
+	consumer.NewRedisConstructor(k, r).Start()
 
 	defer func() {
 		if err := RedisClient.Close(); err != nil {

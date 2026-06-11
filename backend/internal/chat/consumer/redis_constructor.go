@@ -1,7 +1,8 @@
-package readmodel
+package consumer
 
 import (
 	"backend/internal/chat/domain"
+	"backend/internal/chat/readmodel"
 	"backend/internal/shared/infra/pubsub"
 	"context"
 	"encoding/json"
@@ -11,10 +12,10 @@ import (
 
 type RedisConstructor struct {
 	subscriber pubsub.EventSubscriber
-	repo       *ChatRedisRepository
+	repo       *readmodel.ChatRedisRepository
 }
 
-func NewRedisConstructor(sub pubsub.EventSubscriber, repo *ChatRedisRepository) *RedisConstructor {
+func NewRedisConstructor(sub pubsub.EventSubscriber, repo *readmodel.ChatRedisRepository) *RedisConstructor {
 	return &RedisConstructor{
 		subscriber: sub,
 		repo:       repo,
@@ -67,9 +68,9 @@ func (rc *RedisConstructor) onCreate(ctx context.Context, event *domain.ChatEven
 	}
 
 	// ToDo: sender 情報は将来的に User サービスから取得
-	model := &ChatReadModel{
+	model := &readmodel.ChatReadModel{
 		ID: p.ID,
-		Sender: User{
+		Sender: readmodel.User{
 			ID:   p.SenderID,
 			Name: "test name",
 			Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
@@ -86,10 +87,20 @@ func (rc *RedisConstructor) onCreate(ctx context.Context, event *domain.ChatEven
 		return
 	}
 
-	e := NewChatCreatedEvent(*model)
+	e := readmodel.NewChatCreatedEvent(*model)
 	if err := rc.repo.PublishChatEvent(ctx, model.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
+
+	//if err := rc.repo.LPushHistory(ctx, model); err != nil {
+	//	log.Println("Failed to push chat history:", err)
+	//	return
+	//}
+	//
+	//if err := rc.repo.ZAddNXRoomChatIds(ctx, model); err != nil {
+	//	log.Println("Failed to save room chat IDs:", err)
+	//	return
+	//}
 }
 
 func (rc *RedisConstructor) onUpdate(ctx context.Context, event *domain.ChatEvent) {
@@ -112,10 +123,20 @@ func (rc *RedisConstructor) onUpdate(ctx context.Context, event *domain.ChatEven
 		return
 	}
 
-	e := NewChatEditedEvent(*edited)
+	e := readmodel.NewChatEditedEvent(*edited)
 	if err := rc.repo.PublishChatEvent(ctx, edited.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
+
+	//if err := rc.repo.LPushHistory(ctx, edited); err != nil {
+	//	log.Println("Failed to push chat history:", err)
+	//	return
+	//}
+	//
+	//if err := rc.repo.ZAddNXRoomChatIds(ctx, edited); err != nil {
+	//	log.Println("Failed to save room chat IDs:", err)
+	//	return
+	//}
 }
 
 func (rc *RedisConstructor) onDelete(ctx context.Context, event *domain.ChatEvent) {
@@ -131,7 +152,7 @@ func (rc *RedisConstructor) onDelete(ctx context.Context, event *domain.ChatEven
 		return
 	}
 
-	e := NewChatDeletedEvent(p.ID, p.RoomID)
+	e := readmodel.NewChatDeletedEvent(p.ID, p.RoomID)
 	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
@@ -139,4 +160,15 @@ func (rc *RedisConstructor) onDelete(ctx context.Context, event *domain.ChatEven
 	if err := rc.repo.DelChat(ctx, p.ID); err != nil {
 		log.Println("Failed to delete chat from Redis:", err)
 	}
+
+	//if err := rc.repo.ZRemRoomChatIds(ctx, orig.RoomID, p.ID); err != nil {
+	//	log.Println("Failed to remove chat ID from room:", err)
+	//	return
+	//}
+	//
+	//if err := rc.repo.DelHistory(ctx, p.ID); err != nil {
+	//	log.Println("Failed to delete chat history:", err)
+	//	return
+	//}
+
 }

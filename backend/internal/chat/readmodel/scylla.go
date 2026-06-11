@@ -132,7 +132,6 @@ func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid
 		if !iter.Scan(&gID, &gRoomID, &gSenderID, &senderName, &senderIcon, &msg, &version, &createdAt, &updatedAt) {
 			break
 		}
-		log.Println("ScyllaDB returned chat:", fromGocql(gID), "room:", fromGocql(gRoomID), "sender:", fromGocql(gSenderID))
 		result = append(result, &ChatReadModel{
 			ID:        fromGocql(gID),
 			RoomID:    fromGocql(gRoomID),

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"backend/internal/chat/consumer"
 	"backend/internal/chat/readmodel"
 	"backend/internal/shared/infra/pubsub/kafka"
 	"log"
@@ -21,10 +22,8 @@ func main() {
 	kafkaReader := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "chat-materializer")
 	defer kafkaReader.Close()
 
-	readmodel.NewMaterializer(kafkaReader, scylla).Start()
-
-	log.Println("==== Consumer started. Waiting for events...")
-
+	consumer.NewMaterializer(kafkaReader, scylla).Start()
+	
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
