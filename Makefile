@@ -7,15 +7,20 @@ z_run-query:
 z_run-ws:
 	cd backend && PORT=8082 go run ./cmd/chat/ws/main.go
 
-z_run-consumer-kafka-chat:
+z_run-consumer-notifier:
 	cd backend && go run ./cmd/chat/consumer/notifier/main.go
+
+z_run-consumer-chat:
+	cd backend && go run ./cmd/chat/consumer/chat/main.go
+
 
 run-backend:
 	trap 'kill 0' SIGINT SIGTERM EXIT; \
 	$(MAKE) z_run-command & \
 	$(MAKE) z_run-query & \
 	$(MAKE) z_run-ws & \
-	$(MAKE) z_run-consumer-kafka-chat & \
+	$(MAKE) z_run-consumer-notifier & \
+	$(NAME) z_run-consumer-chat & \
 	wait
 
 kill-backend:

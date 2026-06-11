@@ -8,166 +8,111 @@ import (
 	"log"
 )
 
-type ChatHistory struct {
-	ChatId    string `json:"id"`
-	Timestamp int64  `json:"timestamp"`
-}
-
-type RedisConstructor struct {
+type Materializer struct {
 	subscriber pubsub.EventSubscriber
-	repo       *ChatRedisRepository
+	scylla     *ChatScyllaRepository
 }
 
-func NewRedisConstructor(sub pubsub.EventSubscriber, repo *ChatRedisRepository) *RedisConstructor {
-	return &RedisConstructor{
+func NewMaterializer(sub pubsub.EventSubscriber, scylla *ChatScyllaRepository) *Materializer {
+	return &Materializer{
 		subscriber: sub,
-		repo:       repo,
+		scylla:     scylla,
 	}
 }
 
-func (rc *RedisConstructor) Start() {
+func (m *Materializer) Start() {
 	go func() {
-		if err := rc.subscriber.Subscribe("_", func(key string, value []byte) error {
-			rc.process(value, context.Background())
+		if err := m.subscriber.Subscribe("_", func(key string, value []byte) error {
+			m.process(context.Background(), value)
 			return nil
 		}); err != nil {
-			log.Panicln(
-
-				"Failed to subscribe to event:", err)
+			log.Panicln("Failed to subscribe to event:", err)
 		}
-		log.Println("Event subscriber started")
 	}()
 }
 
-func (rc *RedisConstructor) process(msg []byte, ctx context.Context) {
+func (m *Materializer) process(ctx context.Context, msg []byte) {
 	chatEvent := &domain.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+		log.Println("Failed to unmarshal chat event:", err)
 		return
 	}
 
 	switch chatEvent.Type {
 	case domain.EventTypeCreated:
-		rc.createReadModel(ctx, chatEvent)
+		m.onCreate(ctx, chatEvent)
 	case domain.EventTypeUpdated:
-		rc.updateReadModel(ctx, chatEvent)
+		m.onUpdate(ctx, chatEvent)
 	case domain.EventTypeDeleted:
-		rc.DeleteReadModel(ctx, chatEvent)
+		m.onDelete(ctx, chatEvent)
+	default:
+		log.Println("Unknown event type:", chatEvent.Type)
 	}
-
 }
 
-func (rc *RedisConstructor) createReadModel(ctx context.Context, event *domain.ChatEvent) {
-	chat := &domain.ChatCreatedPayload{}
-	if err := json.Unmarshal(event.Payload, chat); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
+	p := &domain.ChatCreatedPayload{}
+	if err := json.Unmarshal(event.Payload, p); err != nil {
+		log.Println("Failed to unmarshal ChatCreatedPayload:", err)
 		return
 	}
-	// ToDo get From Redis
-	s := User{
-		ID:   chat.SenderID,
-		Name: "test name",
-		Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
-	}
 
-	r := &ChatReadModel{
-		ID:        chat.ID,
-		Sender:    s,
-		RoomID:    chat.RoomID,
-		Message:   chat.Message,
-		Version:   chat.Version,
+	// ToDo: sender 情報は将来的に User サービスから取得
+	model := &ChatReadModel{
+		ID: p.ID,
+		Sender: User{
+			ID:   p.SenderID,
+			Name: "test name",
+			Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+		},
+		RoomID:    p.RoomID,
+		Message:   p.Message,
+		Version:   p.Version,
 		CreatedAt: event.OccurredAt,
 		UpdatedAt: event.OccurredAt,
 	}
 
-	if err := rc.repo.SetChat(ctx, r); err != nil {
-		log.Println("Failed to save chat read model:", err)
-		return
-	}
-
-	e := NewChatCreatedEvent(*r)
-
-	if err := rc.repo.PublishChatEvent(ctx, r.RoomID, e); err != nil {
-		log.Println("Failed to publish chat event:", err)
-		return
-	}
-
-	if err := rc.repo.LPushHistory(ctx, r); err != nil {
-		log.Println("Failed to push chat history:", err)
-		return
-	}
-
-	if err := rc.repo.ZAddNXRoomChatIds(ctx, r); err != nil {
-		log.Println("Failed to save room chat IDs:", err)
+	if err := m.scylla.InsertChat(ctx, model); err != nil {
+		log.Println("Failed to insert chat to ScyllaDB:", err)
 		return
 	}
 }
 
-func (rc *RedisConstructor) updateReadModel(ctx context.Context, chatEvent *domain.ChatEvent) {
+func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 	p := &domain.ChatEditedPayload{}
-	if err := json.Unmarshal(chatEvent.Payload, p); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+	if err := json.Unmarshal(event.Payload, p); err != nil {
+		log.Println("Failed to unmarshal ChatEditedPayload:", err)
 		return
 	}
 
-	orig, err := rc.repo.GetChat(ctx, p.ID)
+	orig, err := m.scylla.GetChatByID(ctx, p.ID)
 	if err != nil {
-		log.Println("Failed to get chat:", err)
+		log.Println("Failed to get original chat from ScyllaDB:", err)
 		return
 	}
 
-	edited, err := orig.NewUpdate(p.Message, chatEvent.OccurredAt)
+	edited, _ := orig.NewUpdate(p.Message, event.OccurredAt)
 
-	if err := rc.repo.SetChat(ctx, edited); err != nil {
-		log.Println("Failed to update chat read model:", err)
-		return
-	}
-
-	e := NewChatEditedEvent(*edited)
-
-	if err := rc.repo.PublishChatEvent(ctx, edited.RoomID, e); err != nil {
-		log.Println("Failed to publish chat event:", err)
-		return
-	}
-
-	if err := rc.repo.LPushHistory(ctx, edited); err != nil {
-		log.Println("Failed to push chat history:", err)
+	if err := m.scylla.UpdateChat(ctx, edited); err != nil {
+		log.Println("Failed to update chat in ScyllaDB:", err)
 		return
 	}
 }
 
-func (rc *RedisConstructor) DeleteReadModel(ctx context.Context, chatEvent *domain.ChatEvent) {
+func (m *Materializer) onDelete(ctx context.Context, event *domain.ChatEvent) {
 	p := &domain.ChatDeletedPayload{}
-	if err := json.Unmarshal(chatEvent.Payload, p); err != nil {
-		log.Println("Failed to unmarshal chat:", err)
+	if err := json.Unmarshal(event.Payload, p); err != nil {
+		log.Println("Failed to unmarshal ChatDeletedPayload:", err)
 		return
 	}
 
-	orig, err := rc.repo.GetChat(ctx, p.ID)
+	orig, err := m.scylla.GetChatByID(ctx, p.ID)
 	if err != nil {
-		log.Println("Failed to get chat:", err)
+		log.Println("Failed to get original chat from ScyllaDB:", err)
 		return
 	}
 
-	e := NewChatDeletedEvent(p.ID, p.RoomID)
-
-	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
-		log.Println("Failed to publish chat event:", err)
-		return
-	}
-
-	if err := rc.repo.ZRemRoomChatIds(ctx, orig.RoomID, p.ID); err != nil {
-		log.Println("Failed to remove chat ID from room:", err)
-		return
-	}
-
-	if err := rc.repo.DelChat(ctx, p.ID); err != nil {
-		log.Println("Failed to delete chat read model:", err)
-		return
-	}
-
-	if err := rc.repo.DelHistory(ctx, p.ID); err != nil {
-		log.Println("Failed to delete chat history:", err)
-		return
+	if err := m.scylla.DeleteChat(ctx, orig.ID); err != nil {
+		log.Println("Failed to delete chat from ScyllaDB:", err)
 	}
 }

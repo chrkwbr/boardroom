@@ -52,3 +52,12 @@ services:
     restart: always
     ports:
       - "6379:6379"
+
+  scylla:
+    build:
+      context: ./scylla
+    restart: always
+    ports:
+      - "9042:9042"
+    volumes:
+      - ./scylla-data:/var/lib/scylla
