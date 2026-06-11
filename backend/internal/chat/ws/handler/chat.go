@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"backend/chat/readmodel"
-	"backend/infra/hub"
+	"backend/internal/chat/readmodel"
+	"backend/internal/shared/infra/hub"
 	"encoding/json"
 	"log"
 	"net/http"

@@ -1,7 +1,7 @@
 package api
 
 import (
-	"backend/chat/query/service"
+	"backend/internal/chat/query/service"
 	"log"
 	"net/http"
 
@@ -27,6 +27,8 @@ func (con *ChatQueryController) RegisterRoutes(r *gin.RouterGroup) {
 }
 
 func (con *ChatQueryController) list(ctx *gin.Context) {
+	log.Println("list :room", ctx.Query("room"))
+
 	room := ctx.Param("room")
 	chats, err := con.chatService.ListMessage(ctx, room)
 	if err != nil {

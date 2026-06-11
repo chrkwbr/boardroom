@@ -1,8 +1,8 @@
 package readmodel
 
 import (
-	"backend/chat/domain"
-	"backend/infra/pubsub"
+	"backend/internal/chat/domain"
+	"backend/internal/shared/infra/pubsub"
 	"context"
 	"encoding/json"
 	"log"

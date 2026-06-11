@@ -1,8 +1,8 @@
 package service
 
 import (
-	"backend/chat/query/repository"
-	"backend/chat/readmodel"
+	"backend/internal/chat/query/repository"
+	"backend/internal/chat/readmodel"
 	"context"
 	"slices"
 )

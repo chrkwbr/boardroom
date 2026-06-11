@@ -1,8 +1,9 @@
 package kafka
 
 import (
-	"backend/infra/pubsub"
+	"backend/internal/shared/infra/pubsub"
 	"context"
+
 	"github.com/segmentio/kafka-go"
 )
 

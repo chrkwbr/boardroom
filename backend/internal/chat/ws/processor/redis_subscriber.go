@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"backend/infra/hub"
+	"backend/internal/shared/infra/hub"
 	"context"
 	"log"
 

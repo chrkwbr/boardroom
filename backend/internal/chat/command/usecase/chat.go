@@ -1,10 +1,8 @@
 package usecase
 
 import (
-	"backend/chat/domain"
-	//"backend/infra/db"
-	//"backend/infra/hub"
-	"backend/infra/pubsub"
+	"backend/internal/chat/domain"
+	"backend/internal/shared/infra/pubsub"
 	"encoding/json"
 
 	"github.com/google/uuid"

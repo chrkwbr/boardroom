@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"backend/chat/readmodel"
+	"backend/internal/chat/readmodel"
 	"context"
 	"encoding/json"
 	"fmt"
