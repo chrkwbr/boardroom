@@ -8,7 +8,7 @@ z_run-ws:
 	cd backend && PORT=8082 go run ./cmd/chat/ws/main.go
 
 z_run-consumer-kafka-chat:
-	cd backend && go run ./cmd/chat/consumer/chat/main.go
+	cd backend && go run ./cmd/chat/consumer/notifier/main.go
 
 run-backend:
 	trap 'kill 0' SIGINT SIGTERM EXIT; \
