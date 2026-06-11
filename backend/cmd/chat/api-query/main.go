@@ -1,10 +1,9 @@
 package main
 
 import (
-	"backend/internal/chat/readmodel"
-	wschat "backend/internal/chat/ws/handler"
-	"backend/internal/chat/ws/processor"
-	"backend/internal/shared/infra/pubsub/kafka"
+	chatqueryApi "backend/internal/chat/query/api"
+	"backend/internal/chat/query/repository"
+	"backend/internal/chat/query/service"
 	"log"
 	"os"
 
@@ -29,23 +28,19 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	ws := r.Group("/ws")
-	chatWs := wschat.NewChatWebSocket()
-	chatWs.RegisterRoutes(ws)
+	// == Chat API ==
+	chatReadModelRepository := repository.NewChatReadModelRepository(RedisClient)
+	chatQueryApi := chatqueryApi.NewChatQueryController(
+		service.NewChatService(chatReadModelRepository),
+	)
 
-	// Redis pub/sub → WebSocket への push
-	processor.NewChatRedisSubscriber(RedisClient).Start()
-
-	// Kafka → Redis read model 構築
-	subscriberRedisConstructor := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_constructor")
-	readmodelRedis := readmodel.NewChatRedisRepository(RedisClient)
-	readmodel.NewRedisConstructor(subscriberRedisConstructor, readmodelRedis).Start()
+	api := r.Group("/api")
+	chatQueryApi.RegisterRoutes(api)
 
 	defer func() {
 		if err := RedisClient.Close(); err != nil {
 			log.Println("Error closing Redis client:", err)
 		}
-		subscriberRedisConstructor.Close()
 	}()
 
 	port := os.Getenv("PORT")

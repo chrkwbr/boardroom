@@ -1,9 +1,7 @@
 package main
 
 import (
-	chatqueryApi "backend/internal/chat/query/api"
-	"backend/internal/chat/query/repository"
-	"backend/internal/chat/query/service"
+	wschat "backend/internal/chat/ws/handler"
 	"backend/internal/chat/ws/processor"
 	"log"
 	"os"
@@ -29,15 +27,11 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	// == Chat API ==
-	chatReadModelRepository := repository.NewChatReadModelRepository(RedisClient)
-	chatQueryApi := chatqueryApi.NewChatQueryController(
-		service.NewChatService(chatReadModelRepository),
-	)
+	ws := r.Group("/ws")
+	chatWs := wschat.NewChatWebSocket()
+	chatWs.RegisterRoutes(ws)
 
-	api := r.Group("/api")
-	chatQueryApi.RegisterRoutes(api)
-
+	// Redis pub/sub → WebSocket への push
 	processor.NewChatRedisSubscriber(RedisClient).Start()
 
 	defer func() {
