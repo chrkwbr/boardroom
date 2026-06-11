@@ -2,7 +2,7 @@ export const get = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<ApiResult<T>> => {
-  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
+  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL_CHAT_QUERY;
   const url: string = `${baseUrl}/api/${path}`;
   try {
     const response: Response = await fetch(url, options ? options : {});
@@ -26,7 +26,7 @@ export const post = async <P, T>(
   data: P,
   options?: RequestInit,
 ): Promise<ApiResult<T>> => {
-  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
+  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL_CHAT_COMMAND;
   const url: string = `${baseUrl}/api/${path}`;
   try {
     const response: Response = await fetch(url, {
@@ -56,7 +56,7 @@ export const del = async <T>(
   path: string,
   options?: RequestInit,
 ): Promise<ApiResult<T>> => {
-  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL;
+  const baseUrl = import.meta.env.VITE_REACT_APP_API_BASE_URL_CHAT_COMMAND;
   const url: string = `${baseUrl}/api/${path}`;
   try {
     const response: Response = await fetch(url, {
