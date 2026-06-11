@@ -10,6 +10,7 @@ import (
 	"backend/internal/shared/infra/pubsub/kafka"
 	"database/sql"
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -61,7 +62,8 @@ func main() {
 		eventPublisher.Close()
 	}()
 
-	if err := r.Run(":8080"); err != nil {
+	port := os.Getenv("PORT")
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
 }

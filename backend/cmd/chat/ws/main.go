@@ -6,6 +6,7 @@ import (
 	"backend/internal/chat/ws/processor"
 	"backend/internal/shared/infra/pubsub/kafka"
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -47,7 +48,8 @@ func main() {
 		subscriberRedisConstructor.Close()
 	}()
 
-	if err := r.Run(":8082"); err != nil {
+	port := os.Getenv("PORT")
+	if err := r.Run(":" + port); err != nil {
 		log.Fatal(err)
 	}
 }
