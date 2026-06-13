@@ -1,4 +1,4 @@
-package hub
+package event_hub
 
 import (
 	"fmt"

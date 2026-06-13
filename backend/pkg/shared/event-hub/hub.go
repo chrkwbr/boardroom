@@ -1,4 +1,4 @@
-package hub
+package event_hub
 
 type Client struct {
 	send chan []byte

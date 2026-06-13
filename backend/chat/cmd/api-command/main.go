@@ -1,7 +1,7 @@
 package main
 
 import (
-	"boardroom/shared/infra/pubsub/kafka"
+	"boardroom/shared/infra/pubsub"
 	"chat-api-command/internal/api"
 	"chat-api-command/internal/usecase"
 	"log"
@@ -23,7 +23,7 @@ func main() {
 	}))
 
 	// == Chat API ==
-	eventPublisher := kafka.NewKafkaWriter([]string{"localhost:9092"})
+	eventPublisher := pubsub.NewKafkaWriter([]string{"localhost:9092"})
 	chatCommandApi := api.NewChatCommandController(
 		usecase.NewChatUseCase(
 			eventPublisher,

@@ -2,7 +2,7 @@ package handler
 
 import (
 	"boardroom/chat-notification"
-	"boardroom/shared/infra/hub"
+	hub "boardroom/shared/event-hub"
 	"encoding/json"
 	"log"
 	"net/http"

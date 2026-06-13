@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"boardroom/shared/infra/hub"
+	hub "boardroom/shared/event-hub"
 	"context"
 	"log"
 

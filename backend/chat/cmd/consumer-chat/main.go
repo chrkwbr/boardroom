@@ -2,7 +2,7 @@ package main
 
 import (
 	"boardroom/chat-readmodel"
-	"boardroom/shared/infra/pubsub/kafka"
+	"boardroom/shared/infra/pubsub"
 	"chat-consumer-chat/internal"
 	"log"
 	"os"
@@ -19,7 +19,7 @@ func main() {
 	}
 	defer scylla.Close()
 
-	kafkaReader := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "chat-materializer")
+	kafkaReader := pubsub.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "chat-materializer")
 	defer kafkaReader.Close()
 
 	internal.NewMaterializer(kafkaReader, scylla).Start()
