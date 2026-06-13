@@ -125,8 +125,8 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 		case readmodel.EventTypeDeleted:
 			wsChatEvent = &WsChatEvent{
 				EventType: e.Type,
-				RoomId:    e.Payload.RoomID.String(),
-				ChatId:    e.Payload.ID.String(),
+				RoomId:    e.RoomID.String(),
+				ChatId:    e.ChatID.String(),
 			}
 		default:
 			log.Println("Unknown event type:", e.Type)

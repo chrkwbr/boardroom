@@ -42,7 +42,7 @@ func NewEditedChat(id uuid.UUID, senderId uuid.UUID, roomId uuid.UUID, message s
 //		panic(err)
 //	}
 //	return ChatEvent{
-//		ChatId:    c.ID,
+//		ChatID:    c.ID,
 //		EventType: ChatEditedPayload,
 //		Version:   c.Version,
 //		Payload:   jsonChat,
@@ -56,7 +56,7 @@ func NewEditedChat(id uuid.UUID, senderId uuid.UUID, roomId uuid.UUID, message s
 //		panic(err)
 //	}
 //	return ChatEvent{
-//		ChatId:    c.ID,
+//		ChatID:    c.ID,
 //		EventType: ChatDeletedEvent,
 //		Version:   c.Version,
 //		Payload:   jsonChat,

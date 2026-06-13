@@ -14,16 +14,16 @@ const (
 
 type ChatRedisEvent struct {
 	Type    EventType      `json:"type"`
-	RoomId  uuid.UUID      `json:"roomId"`
-	ChatId  uuid.UUID      `json:"chatId"`
+	RoomID  uuid.UUID      `json:"roomID"`
+	ChatID  uuid.UUID      `json:"chatID"`
 	Payload *ChatReadModel `json:"payload,omitempty"`
 }
 
 func NewChatCreatedEvent(r ChatReadModel) *ChatRedisEvent {
 	return &ChatRedisEvent{
 		Type:    EventTypeCreated,
-		RoomId:  r.RoomID,
-		ChatId:  r.ID,
+		RoomID:  r.RoomID,
+		ChatID:  r.ID,
 		Payload: &r,
 	}
 }
@@ -31,8 +31,8 @@ func NewChatCreatedEvent(r ChatReadModel) *ChatRedisEvent {
 func NewChatEditedEvent(r ChatReadModel) *ChatRedisEvent {
 	return &ChatRedisEvent{
 		Type:    EventTypeUpdated,
-		RoomId:  r.RoomID,
-		ChatId:  r.ID,
+		RoomID:  r.RoomID,
+		ChatID:  r.ID,
 		Payload: &r,
 	}
 }
@@ -40,7 +40,7 @@ func NewChatEditedEvent(r ChatReadModel) *ChatRedisEvent {
 func NewChatDeletedEvent(r uuid.UUID, c uuid.UUID) *ChatRedisEvent {
 	return &ChatRedisEvent{
 		Type:   EventTypeDeleted,
-		RoomId: r,
-		ChatId: c,
+		RoomID: r,
+		ChatID: c,
 	}
 }
