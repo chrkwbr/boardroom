@@ -2,21 +2,23 @@ CREATE KEYSPACE IF NOT EXISTS chat
     WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
 
 CREATE TABLE IF NOT EXISTS chat.chat_messages (
-    room_id   uuid,
-    created_at bigint,
-    id        uuid,
-    sender_id  uuid,
-    sender_name text,
-    sender_icon text,
-    message    text,
-    version    bigint,
-    updated_at bigint,
-    PRIMARY KEY ((room_id), created_at, id)
-) WITH CLUSTERING ORDER BY (created_at DESC, id ASC);
+    room_id     uuid,
+    id          uuid,
+    message     text,
+    sender_id   uuid,
+    version     bigint,
+    created_at  bigint,
+    updated_at  bigint,
+    PRIMARY KEY ((room_id), id)
+) WITH CLUSTERING ORDER BY (id DESC);
 
--- id 単体 / room_id + id での検索を ALLOW FILTERING なしに行うためのルックアップテーブル
-CREATE TABLE IF NOT EXISTS chat.chat_messages_by_id (
-    id         uuid PRIMARY KEY,
-    room_id    uuid,
-    created_at bigint
-);
+CREATE TABLE IF NOT EXISTS chat.chat_message_histories (
+    id          uuid,
+    message     text,
+    version     bigint,
+    room_id     uuid,
+    sender_id   uuid,
+    created_at  bigint,
+    updated_at  bigint,
+    PRIMARY KEY ((id), version)
+) WITH CLUSTERING ORDER BY (version DESC);
