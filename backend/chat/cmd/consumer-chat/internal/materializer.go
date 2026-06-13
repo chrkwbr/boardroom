@@ -66,7 +66,7 @@ func (m *Materializer) onCreate(ctx context.Context, evt *event.ChatEvent) {
 		return
 	}
 
-	model := &readmodel.ChatReadModel{
+	model := &readmodel.Chat{
 		ID:        p.ID,
 		SenderID:  p.SenderID,
 		RoomID:    p.RoomID,

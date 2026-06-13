@@ -34,7 +34,7 @@ func (r *ChatScyllaRepository) Close() {
 func toGocql(u uuid.UUID) gocql.UUID   { return gocql.UUID(u) }
 func fromGocql(u gocql.UUID) uuid.UUID { return uuid.UUID(u) }
 
-func (r *ChatScyllaRepository) InsertChat(ctx context.Context, m *ChatReadModel) error {
+func (r *ChatScyllaRepository) InsertChat(ctx context.Context, m *Chat) error {
 	return r.session.Query(`
 		INSERT INTO chat.chat_messages
 			(room_id, id, sender_id, message, version, created_at, updated_at)
@@ -45,7 +45,7 @@ func (r *ChatScyllaRepository) InsertChat(ctx context.Context, m *ChatReadModel)
 }
 
 // GetChat は room_id + id で効率よく1件取得します。
-func (r *ChatScyllaRepository) GetChat(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) (*ChatReadModel, error) {
+func (r *ChatScyllaRepository) GetChat(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) (*Chat, error) {
 	var (
 		gID, gRoomID, gSenderID       gocql.UUID
 		message                       string
@@ -60,7 +60,7 @@ func (r *ChatScyllaRepository) GetChat(ctx context.Context, roomID uuid.UUID, ch
 	if err != nil {
 		return nil, err
 	}
-	return &ChatReadModel{
+	return &Chat{
 		ID:        fromGocql(gID),
 		RoomID:    fromGocql(gRoomID),
 		SenderID:  fromGocql(gSenderID),
@@ -71,7 +71,7 @@ func (r *ChatScyllaRepository) GetChat(ctx context.Context, roomID uuid.UUID, ch
 	}, nil
 }
 
-func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid.UUID, limit int) ([]*ChatReadModel, error) {
+func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid.UUID, limit int) ([]*Chat, error) {
 	iter := r.session.Query(`
 		SELECT id, room_id, sender_id, message, version, created_at, updated_at
 		FROM chat.chat_messages
@@ -80,7 +80,7 @@ func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid
 		toGocql(roomID), limit,
 	).WithContext(ctx).Iter()
 
-	var result []*ChatReadModel
+	var result []*Chat
 	for {
 		var (
 			gID, gRoomID, gSenderID       gocql.UUID
@@ -90,7 +90,7 @@ func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid
 		if !iter.Scan(&gID, &gRoomID, &gSenderID, &msg, &version, &createdAt, &updatedAt) {
 			break
 		}
-		result = append(result, &ChatReadModel{
+		result = append(result, &Chat{
 			ID:        fromGocql(gID),
 			RoomID:    fromGocql(gRoomID),
 			SenderID:  fromGocql(gSenderID),
@@ -106,7 +106,7 @@ func (r *ChatScyllaRepository) GetChatsByRoomID(ctx context.Context, roomID uuid
 	return result, nil
 }
 
-func (r *ChatScyllaRepository) UpdateChat(ctx context.Context, m *ChatReadModel) error {
+func (r *ChatScyllaRepository) UpdateChat(ctx context.Context, m *Chat) error {
 	return r.session.Query(`
 		UPDATE chat.chat_messages
 		SET message = ?, version = ?, updated_at = ?
@@ -126,7 +126,7 @@ func (r *ChatScyllaRepository) DeleteChat(ctx context.Context, roomID uuid.UUID,
 
 // history
 
-func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) ([]*ChatReadModel, error) {
+func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) ([]*Chat, error) {
 	// ToDo status が deleted 無者は除外
 	iter := r.session.Query(`
 		SELECT id, room_id, sender_id, message, version, created_at, updated_at
@@ -135,7 +135,7 @@ func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID,
 		toGocql(roomID), toGocql(chatID),
 	).WithContext(ctx).Iter()
 
-	var result []*ChatReadModel
+	var result []*Chat
 	for {
 		var (
 			gID, gRoomID, gSenderID       gocql.UUID
@@ -145,7 +145,7 @@ func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID,
 		if !iter.Scan(&gID, &gRoomID, &gSenderID, &msg, &version, &createdAt, &updatedAt) {
 			break
 		}
-		result = append(result, &ChatReadModel{
+		result = append(result, &Chat{
 			ID:        fromGocql(gID),
 			RoomID:    fromGocql(gRoomID),
 			SenderID:  fromGocql(gSenderID),
@@ -161,7 +161,7 @@ func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID,
 	return result, nil
 }
 
-func (r *ChatScyllaRepository) InsertHistory(ctx context.Context, m *ChatReadModel, status Status) error {
+func (r *ChatScyllaRepository) InsertHistory(ctx context.Context, m *Chat, status Status) error {
 	return r.session.Query(`
 		INSERT INTO chat.chat_message_histories
 			(id, sender_id, message, version, room_id, created_at, updated_at, status)

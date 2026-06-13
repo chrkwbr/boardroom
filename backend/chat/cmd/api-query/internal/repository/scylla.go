@@ -15,10 +15,10 @@ func NewChatScyllaQueryRepository(scylla *readmodel.ChatScyllaRepository) *ChatS
 	return &ChatScyllaQueryRepository{scylla: scylla}
 }
 
-func (r *ChatScyllaQueryRepository) ListMessagesByRoom(ctx context.Context, roomID uuid.UUID, limit int) ([]*readmodel.ChatReadModel, error) {
+func (r *ChatScyllaQueryRepository) ListMessagesByRoom(ctx context.Context, roomID uuid.UUID, limit int) ([]*readmodel.Chat, error) {
 	return r.scylla.GetChatsByRoomID(ctx, roomID, limit)
 }
 
-func (r *ChatScyllaQueryRepository) ListMessageHistories(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) ([]*readmodel.ChatReadModel, error) {
+func (r *ChatScyllaQueryRepository) ListMessageHistories(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) ([]*readmodel.Chat, error) {
 	return r.scylla.GetHistory(ctx, roomID, chatID)
 }

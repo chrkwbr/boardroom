@@ -2,7 +2,7 @@ package readmodel
 
 import "github.com/google/uuid"
 
-type ChatReadModel struct {
+type Chat struct {
 	RoomID    uuid.UUID `json:"roomId"`
 	ID        uuid.UUID `json:"id"`
 	Message   string    `json:"message"`
@@ -12,8 +12,8 @@ type ChatReadModel struct {
 	UpdatedAt int64     `json:"updatedAt"`
 }
 
-func (c *ChatReadModel) NewUpdate(message string, occurredAt int64) *ChatReadModel {
-	return &ChatReadModel{
+func (c *Chat) NewUpdate(message string, occurredAt int64) *Chat {
+	return &Chat{
 		RoomID:    c.RoomID,
 		ID:        c.ID,
 		Message:   message,
@@ -24,8 +24,8 @@ func (c *ChatReadModel) NewUpdate(message string, occurredAt int64) *ChatReadMod
 	}
 }
 
-func (c *ChatReadModel) NewDelete() *ChatReadModel {
-	return &ChatReadModel{
+func (c *Chat) NewDelete() *Chat {
+	return &Chat{
 		RoomID:    c.RoomID,
 		ID:        c.ID,
 		Message:   "",
