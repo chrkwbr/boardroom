@@ -1,7 +1,7 @@
 package api
 
 import (
-	"backend/chat/cmd/chat/api/command/internal/usecase"
+	"backend/chat/cmd/api-command/internal/usecase"
 	"log"
 	"net/http"
 

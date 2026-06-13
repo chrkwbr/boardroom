@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/chat/cmd/chat/api/query/internal/api"
-	"backend/chat/cmd/chat/api/query/internal/repository"
-	"backend/chat/cmd/chat/api/query/internal/service"
+	"backend/chat/cmd/api-query/internal/api"
+	"backend/chat/cmd/api-query/internal/repository"
+	"backend/chat/cmd/api-query/internal/service"
 	"backend/chat/pkg/shared/readmodel"
 	"log"
 	"os"

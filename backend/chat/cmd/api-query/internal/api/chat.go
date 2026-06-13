@@ -1,7 +1,7 @@
 package api
 
 import (
-	"backend/chat/cmd/chat/api/query/internal/service"
+	"backend/chat/cmd/api-query/internal/service"
 	"log"
 	"net/http"
 

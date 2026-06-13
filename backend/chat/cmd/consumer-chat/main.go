@@ -1,7 +1,7 @@
 package main
 
 import (
-	"backend/chat/cmd/chat/consumer/chat/internal"
+	"backend/chat/cmd/consumer-chat/internal"
 	"backend/chat/pkg/shared/infra/pubsub/kafka"
 	"backend/chat/pkg/shared/readmodel"
 	"log"
