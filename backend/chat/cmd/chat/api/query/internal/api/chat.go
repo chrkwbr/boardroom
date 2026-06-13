@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type ChatQueryController struct {
@@ -21,14 +22,20 @@ func NewChatQueryController(chatService *service.ChatService) *ChatQueryControll
 func (con *ChatQueryController) RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
-		chatGroup.GET("/:room/", con.list)
-		chatGroup.GET("/:room/:chatId/history/", con.history)
+		chatGroup.GET("/:roomID/", con.list)
+		chatGroup.GET("/:roomID/:chatID/history/", con.history)
 	}
 }
 
 func (con *ChatQueryController) list(ctx *gin.Context) {
-	room := ctx.Param("room")
-	chats, err := con.chatService.ListMessage(ctx, room)
+	r := ctx.Param("roomID")
+	roomID, err := uuid.Parse(r)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomID must be a valid UUID"})
+		return
+	}
+
+	chats, err := con.chatService.ListMessage(ctx, roomID)
 	if err != nil {
 		log.Println("Error listing messages:", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list messages"})
@@ -38,9 +45,20 @@ func (con *ChatQueryController) list(ctx *gin.Context) {
 }
 
 func (con *ChatQueryController) history(ctx *gin.Context) {
-	room := ctx.Param("room")
-	chatId := ctx.Param("chatId")
-	chats, err := con.chatService.GetHistory(ctx, room, chatId)
+	r := ctx.Param("roomID")
+	roomID, err := uuid.Parse(r)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomID must be a valid UUID"})
+		return
+	}
+	c := ctx.Param("chatID")
+	chatID, err := uuid.Parse(c)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "chatID must be a valid UUID"})
+		return
+	}
+
+	chats, err := con.chatService.GetHistory(ctx, roomID, chatID)
 	if err != nil {
 		log.Println("Error listing messages:", err)
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list messages"})

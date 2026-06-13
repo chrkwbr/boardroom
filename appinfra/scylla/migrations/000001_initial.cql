@@ -16,8 +16,8 @@ CREATE TABLE IF NOT EXISTS chat.chat_message_histories (
     message    text,
     version    bigint,
     room_id    uuid,
+    status     text,
     created_at bigint,
     updated_at bigint,
-    PRIMARY KEY ((id), version)
+    PRIMARY KEY ((room_id, id), version)
 ) WITH CLUSTERING ORDER BY (version DESC);
-

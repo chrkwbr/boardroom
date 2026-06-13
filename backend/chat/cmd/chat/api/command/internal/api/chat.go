@@ -28,9 +28,9 @@ type ChatRequest struct {
 func (con *ChatCommandController) RegisterRoutes(r *gin.RouterGroup) {
 	chatGroup := r.Group("/chats")
 	{
-		chatGroup.POST("/:roomId/", con.postChat)
-		chatGroup.POST("/:roomId/:chatId", con.editChat)
-		chatGroup.DELETE("/:roomId/:chatId", con.deleteChat)
+		chatGroup.POST("/:roomID/", con.postChat)
+		chatGroup.POST("/:roomID/:chatId", con.editChat)
+		chatGroup.DELETE("/:roomID/:chatId", con.deleteChat)
 	}
 }
 
@@ -47,9 +47,9 @@ func (con *ChatCommandController) postChat(ctx *gin.Context) {
 		return
 	}
 
-	roomID, err := uuid.Parse(ctx.Param("roomId"))
+	roomID, err := uuid.Parse(ctx.Param("roomID"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomID must be a valid UUID"})
 	}
 
 	if err := con.chatUseCase.CreateChat(senderID, roomID, newChat.Message); err != nil {
@@ -66,9 +66,9 @@ func (con *ChatCommandController) editChat(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	roomID, err := uuid.Parse(ctx.Param("roomId"))
+	roomID, err := uuid.Parse(ctx.Param("roomID"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomID must be a valid UUID"})
 		return
 	}
 
@@ -87,9 +87,9 @@ func (con *ChatCommandController) editChat(ctx *gin.Context) {
 }
 
 func (con *ChatCommandController) deleteChat(ctx *gin.Context) {
-	roomID, err := uuid.Parse(ctx.Param("roomId"))
+	roomID, err := uuid.Parse(ctx.Param("roomID"))
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomID must be a valid UUID"})
 		return
 	}
 

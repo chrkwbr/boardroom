@@ -124,7 +124,43 @@ func (r *ChatScyllaRepository) DeleteChat(ctx context.Context, roomID uuid.UUID,
 	).WithContext(ctx).Exec()
 }
 
-// InsertHistory は chat_message_histories にバージョン履歴を追記します。
+// history
+
+func (r *ChatScyllaRepository) GetHistory(ctx context.Context, roomID uuid.UUID, chatID uuid.UUID) ([]*ChatReadModel, error) {
+	// ToDo status が deleted 無者は除外
+	iter := r.session.Query(`
+		SELECT id, room_id, sender_id, message, version, created_at, updated_at
+		FROM chat.chat_message_histories
+		WHERE room_id = ? AND id = ?`,
+		toGocql(roomID), toGocql(chatID),
+	).WithContext(ctx).Iter()
+
+	var result []*ChatReadModel
+	for {
+		var (
+			gID, gRoomID, gSenderID       gocql.UUID
+			msg                           string
+			version, createdAt, updatedAt int64
+		)
+		if !iter.Scan(&gID, &gRoomID, &gSenderID, &msg, &version, &createdAt, &updatedAt) {
+			break
+		}
+		result = append(result, &ChatReadModel{
+			ID:        fromGocql(gID),
+			RoomID:    fromGocql(gRoomID),
+			SenderID:  fromGocql(gSenderID),
+			Message:   msg,
+			Version:   version,
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		})
+	}
+	if err := iter.Close(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (r *ChatScyllaRepository) InsertHistory(ctx context.Context, m *ChatReadModel, status Status) error {
 	return r.session.Query(`
 		INSERT INTO chat.chat_message_histories
