@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"backend/chat/pkg/shared/domain"
-	"backend/chat/pkg/shared/infra/pubsub"
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-notification"
+	"boardroom/shared/event"
+	"boardroom/shared/infra/pubsub"
 	"context"
 	"encoding/json"
 	"log"
@@ -12,10 +12,10 @@ import (
 
 type ChatNotificationPublisher struct {
 	subscriber pubsub.EventSubscriber
-	repo       *readmodel.ChatRedisRepository
+	repo       *notification.ChatRedisRepository
 }
 
-func NewChatNotificationPublisher(sub pubsub.EventSubscriber, repo *readmodel.ChatRedisRepository) *ChatNotificationPublisher {
+func NewChatNotificationPublisher(sub pubsub.EventSubscriber, repo *notification.ChatRedisRepository) *ChatNotificationPublisher {
 	return &ChatNotificationPublisher{
 		subscriber: sub,
 		repo:       repo,
@@ -42,45 +42,44 @@ func (rc *ChatNotificationPublisher) Start() {
 }
 
 func (rc *ChatNotificationPublisher) process(ctx context.Context, msg []byte) {
-	chatEvent := &domain.ChatEvent{}
+	chatEvent := &event.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
 		log.Println("Failed to unmarshal chat event:", err)
 		return
 	}
 
 	switch chatEvent.Type {
-	case domain.EventTypeCreated:
+	case event.EventTypeCreated:
 		rc.onCreate(ctx, chatEvent)
-	case domain.EventTypeUpdated:
+	case event.EventTypeUpdated:
 		rc.onUpdate(ctx, chatEvent)
-	case domain.EventTypeDeleted:
+	case event.EventTypeDeleted:
 		rc.onDelete(ctx, chatEvent)
 	default:
 		log.Println("Unknown event type:", chatEvent.Type)
 	}
 }
 
-func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatCreatedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatCreatedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatCreatedPayload:", err)
 		return
 	}
 
-	// ToDo: sender 情報は将来的に User サービスから取得
-	model := &readmodel.ChatReadModel{
+	// ToDo: sender 情報は将来的に Redis から取得
+	model := &notification.Chat{
 		ID: p.ID,
-		//Sender: readmodel.User{
-		//	ID:   p.SenderID,
-		//	Name: "test name",
-		//	Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
-		//},
-		SenderID:  p.SenderID,
+		Sender: notification.User{
+			ID:   p.SenderID,
+			Name: "test name",
+			Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+		},
 		RoomID:    p.RoomID,
 		Message:   p.Message,
 		Version:   p.Version,
-		CreatedAt: event.OccurredAt,
-		UpdatedAt: event.OccurredAt,
+		CreatedAt: evt.OccurredAt,
+		UpdatedAt: evt.OccurredAt,
 	}
 
 	if err := rc.repo.SetChat(ctx, model); err != nil {
@@ -88,7 +87,7 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 		return
 	}
 
-	e := readmodel.NewChatCreatedEvent(*model)
+	e := notification.NewChatCreatedEvent(*model)
 	if err := rc.repo.PublishChatEvent(ctx, model.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
@@ -104,9 +103,9 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 	//}
 }
 
-func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatEditedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatEditedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatEditedPayload:", err)
 		return
 	}
@@ -117,14 +116,14 @@ func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain
 		return
 	}
 
-	edited := orig.NewUpdate(p.Message, event.OccurredAt)
+	edited := orig.NewUpdate(p.Message, evt.OccurredAt)
 
 	if err := rc.repo.SetChat(ctx, edited); err != nil {
 		log.Println("Failed to update chat in Redis:", err)
 		return
 	}
 
-	e := readmodel.NewChatEditedEvent(*edited)
+	e := notification.NewChatEditedEvent(*edited)
 	if err := rc.repo.PublishChatEvent(ctx, edited.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
@@ -140,9 +139,9 @@ func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain
 	//}
 }
 
-func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatDeletedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatDeletedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatDeletedPayload:", err)
 		return
 	}
@@ -153,7 +152,7 @@ func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, event *domain
 		return
 	}
 
-	e := readmodel.NewChatDeletedEvent(p.RoomID, p.ID)
+	e := notification.NewChatDeletedEvent(p.RoomID, p.ID)
 	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}

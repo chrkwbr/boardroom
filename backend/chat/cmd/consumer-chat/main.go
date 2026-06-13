@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/chat/cmd/consumer-chat/internal"
-	"backend/chat/pkg/shared/infra/pubsub/kafka"
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-readmodel"
+	"boardroom/shared/infra/pubsub"
+	"chat-consumer-chat/internal"
 	"log"
 	"os"
 	"os/signal"
@@ -19,7 +19,7 @@ func main() {
 	}
 	defer scylla.Close()
 
-	kafkaReader := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "chat-materializer")
+	kafkaReader := pubsub.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "chat-materializer")
 	defer kafkaReader.Close()
 
 	internal.NewMaterializer(kafkaReader, scylla).Start()

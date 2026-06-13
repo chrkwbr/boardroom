@@ -1,18 +1,17 @@
 z_run-command:
-	cd backend/chat && PORT=8080 go run ./cmd/api-command/main.go
+	cd backend/chat/cmd/api-command && PORT=8080 go run .
 
 z_run-query:
-	cd backend/chat && PORT=8081 go run ./cmd/api-query/main.go
+	cd backend/chat/cmd/api-query && PORT=8081 go run .
 
 z_run-ws:
-	cd backend/chat && PORT=8082 go run ./cmd/ws/main.go
+	cd backend/chat/cmd/ws && PORT=8082 go run .
 
 z_run-consumer-notifier:
-	cd backend/chat && go run ./cmd/consumer-notifier/main.go
+	cd backend/chat/cmd/consumer-notifier && go run .
 
 z_run-consumer-chat:
-	cd backend/chat && go run ./cmd/consumer-chat/main.go
-
+	cd backend/chat/cmd/consumer-chat && go run .
 
 run-backend:
 	trap 'kill 0' SIGINT SIGTERM EXIT; \
@@ -40,3 +39,25 @@ reset-scylla:
 kill-backend:
 	pkill -f "cmd/chat" || true
 	pkill -f "go-build.*/exe/main" || true
+
+tidy-go-mod:
+	cd backend/pkg/shared && go mod tidy
+	cd backend/chat/internal/domain && go mod tidy
+	cd backend/chat/internal/readmodel && go mod tidy
+	cd backend/chat/internal/notification && go mod tidy
+	cd backend/chat/cmd/api-command && go mod tidy
+	cd backend/chat/cmd/api-query && go mod tidy
+	cd backend/chat/cmd/ws && go mod tidy
+	cd backend/chat/cmd/consumer-notifier && go mod tidy
+	cd backend/chat/cmd/consumer-chat && go mod tidy
+
+go-deps-update:
+	cd backend/pkg/shared && go get -u ./... && go mod tidy
+	cd backend/chat/internal/domain && go get -u ./... && go mod tidy
+	cd backend/chat/internal/readmodel && go get -u ./... && go mod tidy
+	cd backend/chat/internal/notification && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/api-command && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/api-query && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/ws && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/consumer-notifier && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/consumer-chat && go get -u ./... && go mod tidy

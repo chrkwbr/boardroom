@@ -1,8 +1,8 @@
 package main
 
 import (
-	"backend/chat/cmd/ws/internal/handler"
-	"backend/chat/cmd/ws/internal/processor"
+	"chat-ws/internal/handler"
+	"chat-ws/internal/processor"
 	"log"
 	"os"
 

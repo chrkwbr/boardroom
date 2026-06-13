@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/chat/cmd/consumer-notifier/internal"
-	"backend/chat/pkg/shared/infra/pubsub/kafka"
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-notification"
+	"boardroom/shared/infra/pubsub"
+	"chat-consumer-notifier/internal"
 	"log"
 	"os"
 	"os/signal"
@@ -19,8 +19,8 @@ var (
 func main() {
 	Init()
 	// Kafka → Redis read model 構築
-	k := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_pubsub")
-	r := readmodel.NewChatRedisRepository(RedisClient)
+	k := pubsub.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_pubsub")
+	r := notification.NewChatRedisRepository(RedisClient)
 	internal.NewChatNotificationPublisher(k, r).Start()
 
 	defer func() {

@@ -1,12 +1,18 @@
 package repository
 
 import (
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-readmodel"
 	"context"
 	"encoding/json"
 	"fmt"
 
 	"github.com/redis/go-redis/v9"
+)
+
+const (
+	formatChatKey    = "chat:message:%s"
+	formatHistoryKey = "chat:room:%v:timeline"
+	formatChatIDsKey = "chat:message:%v:history"
 )
 
 type ChatReadModelRepository struct {
@@ -20,10 +26,10 @@ func NewChatReadModelRepository(redisClient *redis.Client) *ChatReadModelReposit
 }
 
 // Chat
-func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string) ([]*readmodel.ChatReadModel, error) {
+func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string) ([]*readmodel.Chat, error) {
 	keys := make([]string, len(chatIds))
 	for i, chatId := range chatIds {
-		keys[i] = fmt.Sprintf(readmodel.FormatChatKey, chatId)
+		keys[i] = fmt.Sprintf(formatChatKey, chatId)
 	}
 
 	results, err := r.redis.MGet(ctx, keys...).Result()
@@ -31,12 +37,12 @@ func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string
 		return nil, err
 	}
 
-	var readModels []*readmodel.ChatReadModel
+	var readModels []*readmodel.Chat
 	for _, result := range results {
 		if result == nil || result == "" {
 			continue
 		}
-		readModel := &readmodel.ChatReadModel{}
+		readModel := &readmodel.Chat{}
 		if err := json.Unmarshal([]byte(result.(string)), readModel); err != nil {
 			return nil, err
 		}
@@ -46,7 +52,7 @@ func (r *ChatReadModelRepository) MGetChat(ctx context.Context, chatIds []string
 }
 
 func (r *ChatReadModelRepository) ZRevRangeRoomChatIds(ctx context.Context, roomId string, start, end int64) ([]string, error) {
-	chatRoomKey := fmt.Sprintf(readmodel.FormatCHatIdsKey, roomId)
+	chatRoomKey := fmt.Sprintf(formatChatIDsKey, roomId)
 	chatIds, err := r.redis.ZRevRange(ctx, chatRoomKey, start, end).Result()
 	if err != nil {
 		return nil, err
@@ -56,16 +62,16 @@ func (r *ChatReadModelRepository) ZRevRangeRoomChatIds(ctx context.Context, room
 
 // History
 
-func (r *ChatReadModelRepository) LRangeHistory(ctx context.Context, chatId string) ([]*readmodel.ChatReadModel, error) {
-	chatHistoryKey := fmt.Sprintf(readmodel.FormatHistoryKey, chatId)
+func (r *ChatReadModelRepository) LRangeHistory(ctx context.Context, chatId string) ([]*readmodel.Chat, error) {
+	chatHistoryKey := fmt.Sprintf(formatHistoryKey, chatId)
 	result, err := r.redis.LRange(ctx, chatHistoryKey, 0, -1).Result()
 	if err != nil {
 		return nil, err
 	}
 
-	var messages []*readmodel.ChatReadModel
+	var messages []*readmodel.Chat
 	for _, c := range result {
-		chat := &readmodel.ChatReadModel{}
+		chat := &readmodel.Chat{}
 		if err := json.Unmarshal([]byte(c), chat); err != nil {
 			return nil, err
 		}
