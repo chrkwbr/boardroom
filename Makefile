@@ -50,3 +50,14 @@ tidy-go-mod:
 	cd backend/chat/cmd/ws && go mod tidy
 	cd backend/chat/cmd/consumer-notifier && go mod tidy
 	cd backend/chat/cmd/consumer-chat && go mod tidy
+
+go-deps-update:
+	cd backend/pkg/shared && go get -u ./... && go mod tidy
+	cd backend/chat/internal/domain && go get -u ./... && go mod tidy
+	cd backend/chat/internal/readmodel && go get -u ./... && go mod tidy
+	cd backend/chat/internal/notification && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/api-command && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/api-query && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/ws && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/consumer-notifier && go get -u ./... && go mod tidy
+	cd backend/chat/cmd/consumer-chat && go get -u ./... && go mod tidy
