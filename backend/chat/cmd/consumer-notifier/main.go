@@ -21,7 +21,7 @@ func main() {
 	// Kafka → Redis read model 構築
 	k := kafka.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_pubsub")
 	r := readmodel.NewChatRedisRepository(RedisClient)
-	internal.NewRedisConstructor(k, r).Start()
+	internal.NewChatNotificationPublisher(k, r).Start()
 
 	defer func() {
 		if err := RedisClient.Close(); err != nil {

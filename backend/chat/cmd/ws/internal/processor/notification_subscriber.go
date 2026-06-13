@@ -8,17 +8,17 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-type ChatRedisSubscriber struct {
+type ChatNotificationSubscriber struct {
 	redis *redis.Client
 }
 
-func NewChatRedisSubscriber(redis *redis.Client) *ChatRedisSubscriber {
-	return &ChatRedisSubscriber{
+func NewChatNotificationSubscriber(redis *redis.Client) *ChatNotificationSubscriber {
+	return &ChatNotificationSubscriber{
 		redis: redis,
 	}
 }
 
-func (k *ChatRedisSubscriber) Start() {
+func (k *ChatNotificationSubscriber) Start() {
 	h, err := hub.GetHubFactory().GetHub(hub.ChatEventWsPusher)
 	if err != nil {
 		log.Panicln("Failed to get hub:", err)

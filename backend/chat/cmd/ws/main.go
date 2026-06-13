@@ -32,7 +32,7 @@ func main() {
 	chatWs.RegisterRoutes(ws)
 
 	// Redis pub/sub → WebSocket への push
-	processor.NewChatRedisSubscriber(RedisClient).Start()
+	processor.NewChatNotificationSubscriber(RedisClient).Start()
 
 	defer func() {
 		if err := RedisClient.Close(); err != nil {

@@ -10,19 +10,19 @@ import (
 	"time"
 )
 
-type RedisConstructor struct {
+type ChatNotificationPublisher struct {
 	subscriber pubsub.EventSubscriber
 	repo       *readmodel.ChatRedisRepository
 }
 
-func NewRedisConstructor(sub pubsub.EventSubscriber, repo *readmodel.ChatRedisRepository) *RedisConstructor {
-	return &RedisConstructor{
+func NewChatNotificationPublisher(sub pubsub.EventSubscriber, repo *readmodel.ChatRedisRepository) *ChatNotificationPublisher {
+	return &ChatNotificationPublisher{
 		subscriber: sub,
 		repo:       repo,
 	}
 }
 
-func (rc *RedisConstructor) Start() {
+func (rc *ChatNotificationPublisher) Start() {
 	go func() {
 		const maxRetries = 10
 		for i := range maxRetries {
@@ -37,11 +37,11 @@ func (rc *RedisConstructor) Start() {
 			log.Printf("Failed to subscribe (attempt %d/%d): %v — retrying in %s", i+1, maxRetries, err, wait)
 			time.Sleep(wait)
 		}
-		log.Println("RedisConstructor: gave up after max retries")
+		log.Println("ChatNotificationPublisher: gave up after max retries")
 	}()
 }
 
-func (rc *RedisConstructor) process(ctx context.Context, msg []byte) {
+func (rc *ChatNotificationPublisher) process(ctx context.Context, msg []byte) {
 	chatEvent := &domain.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
 		log.Println("Failed to unmarshal chat event:", err)
@@ -60,7 +60,7 @@ func (rc *RedisConstructor) process(ctx context.Context, msg []byte) {
 	}
 }
 
-func (rc *RedisConstructor) onCreate(ctx context.Context, event *domain.ChatEvent) {
+func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain.ChatEvent) {
 	p := &domain.ChatCreatedPayload{}
 	if err := json.Unmarshal(event.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatCreatedPayload:", err)
@@ -104,7 +104,7 @@ func (rc *RedisConstructor) onCreate(ctx context.Context, event *domain.ChatEven
 	//}
 }
 
-func (rc *RedisConstructor) onUpdate(ctx context.Context, event *domain.ChatEvent) {
+func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 	p := &domain.ChatEditedPayload{}
 	if err := json.Unmarshal(event.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatEditedPayload:", err)
@@ -140,7 +140,7 @@ func (rc *RedisConstructor) onUpdate(ctx context.Context, event *domain.ChatEven
 	//}
 }
 
-func (rc *RedisConstructor) onDelete(ctx context.Context, event *domain.ChatEvent) {
+func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, event *domain.ChatEvent) {
 	p := &domain.ChatDeletedPayload{}
 	if err := json.Unmarshal(event.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatDeletedPayload:", err)
