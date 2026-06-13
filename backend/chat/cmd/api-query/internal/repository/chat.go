@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"boardroom/chat-shared/readmodel"
+	"boardroom/chat-readmodel"
 	"context"
 	"encoding/json"
 	"fmt"

@@ -2,7 +2,10 @@ module chat-consumer-chat
 
 go 1.25.4
 
-require boardroom/chat-shared v0.0.0
+require (
+	boardroom/chat-readmodel v0.0.0
+	boardroom/shared v0.0.0
+)
 
 require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
@@ -18,4 +21,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
 
-replace boardroom/chat-shared => ../../../pkg/shared
+replace (
+	boardroom/chat-readmodel => ../../internal/readmodel
+	boardroom/shared => ../../../pkg/shared
+)

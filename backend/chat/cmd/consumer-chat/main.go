@@ -1,8 +1,8 @@
 package main
 
 import (
-	"boardroom/chat-shared/infra/pubsub/kafka"
-	"boardroom/chat-shared/readmodel"
+	"boardroom/chat-readmodel"
+	"boardroom/shared/infra/pubsub/kafka"
 	"chat-consumer-chat/internal"
 	"log"
 	"os"

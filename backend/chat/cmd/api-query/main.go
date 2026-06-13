@@ -1,7 +1,7 @@
 package main
 
 import (
-	"boardroom/chat-shared/readmodel"
+	"boardroom/chat-readmodel"
 	"chat-api-query/internal/api"
 	"chat-api-query/internal/repository"
 	"chat-api-query/internal/service"

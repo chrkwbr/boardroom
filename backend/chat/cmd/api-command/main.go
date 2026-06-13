@@ -1,7 +1,7 @@
 package main
 
 import (
-	"boardroom/chat-shared/infra/pubsub/kafka"
+	"boardroom/shared/infra/pubsub/kafka"
 	"chat-api-command/internal/api"
 	"chat-api-command/internal/usecase"
 	"log"

@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"boardroom/chat-shared/domain"
-	"boardroom/chat-shared/infra/pubsub"
+	"boardroom/shared/domain"
+	"boardroom/shared/infra/pubsub"
 	"encoding/json"
 
 	"github.com/google/uuid"

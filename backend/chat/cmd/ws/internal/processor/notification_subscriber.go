@@ -1,7 +1,7 @@
 package processor
 
 import (
-	"boardroom/chat-shared/infra/hub"
+	"boardroom/shared/infra/hub"
 	"context"
 	"log"
 

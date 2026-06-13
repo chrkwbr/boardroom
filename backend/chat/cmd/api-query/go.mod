@@ -3,7 +3,7 @@ module chat-api-query
 go 1.25.4
 
 require (
-	boardroom/chat-shared v0.0.0
+	boardroom/chat-readmodel v0.0.0-00010101000000-000000000000
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
 	github.com/google/uuid v1.6.0
@@ -48,4 +48,4 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
 
-replace boardroom/chat-shared => ../../../pkg/shared
+replace boardroom/chat-readmodel => ../../internal/readmodel

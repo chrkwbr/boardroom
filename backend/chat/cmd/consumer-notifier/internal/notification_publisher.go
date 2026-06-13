@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"boardroom/chat-shared/domain"
-	"boardroom/chat-shared/infra/pubsub"
-	"boardroom/chat-shared/readmodel"
+	"boardroom/chat-notification"
+	"boardroom/shared/domain"
+	"boardroom/shared/infra/pubsub"
 	"context"
 	"encoding/json"
 	"log"
@@ -12,10 +12,10 @@ import (
 
 type ChatNotificationPublisher struct {
 	subscriber pubsub.EventSubscriber
-	repo       *readmodel.ChatRedisRepository
+	repo       *notification.ChatRedisRepository
 }
 
-func NewChatNotificationPublisher(sub pubsub.EventSubscriber, repo *readmodel.ChatRedisRepository) *ChatNotificationPublisher {
+func NewChatNotificationPublisher(sub pubsub.EventSubscriber, repo *notification.ChatRedisRepository) *ChatNotificationPublisher {
 	return &ChatNotificationPublisher{
 		subscriber: sub,
 		repo:       repo,
@@ -68,9 +68,9 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 	}
 
 	// ToDo: sender 情報は将来的に User サービスから取得
-	model := &readmodel.ChatReadModel{
+	model := &notification.ChatReadModel{
 		ID: p.ID,
-		//Sender: readmodel.User{
+		//Sender: notification.User{
 		//	ID:   p.SenderID,
 		//	Name: "test name",
 		//	Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
@@ -88,7 +88,7 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 		return
 	}
 
-	e := readmodel.NewChatCreatedEvent(*model)
+	e := notification.NewChatCreatedEvent(*model)
 	if err := rc.repo.PublishChatEvent(ctx, model.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
@@ -124,7 +124,7 @@ func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain
 		return
 	}
 
-	e := readmodel.NewChatEditedEvent(*edited)
+	e := notification.NewChatEditedEvent(*edited)
 	if err := rc.repo.PublishChatEvent(ctx, edited.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
@@ -153,7 +153,7 @@ func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, event *domain
 		return
 	}
 
-	e := readmodel.NewChatDeletedEvent(p.RoomID, p.ID)
+	e := notification.NewChatDeletedEvent(p.RoomID, p.ID)
 	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}

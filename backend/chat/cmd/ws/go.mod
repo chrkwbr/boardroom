@@ -3,7 +3,8 @@ module chat-ws
 go 1.25.4
 
 require (
-	boardroom/chat-shared v0.0.0
+	boardroom/chat-notification v0.0.0
+	boardroom/shared v0.0.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
 	github.com/gorilla/websocket v1.5.3
@@ -24,10 +25,7 @@ require (
 	github.com/go-playground/validator/v10 v10.30.1 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect
-	github.com/gocql/gocql v1.7.0 // indirect
-	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
@@ -47,7 +45,9 @@ require (
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
 	google.golang.org/protobuf v1.36.10 // indirect
-	gopkg.in/inf.v0 v0.9.1 // indirect
 )
 
-replace boardroom/chat-shared => ../../../pkg/shared
+replace (
+	boardroom/chat-notification => ../../internal/notification
+	boardroom/shared => ../../../pkg/shared
+)

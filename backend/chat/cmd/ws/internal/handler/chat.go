@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"boardroom/chat-shared/infra/hub"
-	"boardroom/chat-shared/readmodel"
+	"boardroom/chat-notification"
+	"boardroom/shared/infra/hub"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -21,10 +21,10 @@ func NewChatWebSocket() *ChatWebSocket {
 }
 
 type WsChatEvent struct {
-	EventType readmodel.EventType     `json:"event_type"`
-	RoomId    string                  `json:"room_id"`
-	ChatId    string                  `json:"chat_id"`
-	Chat      readmodel.ChatReadModel `json:"chat"`
+	EventType notification.EventType     `json:"event_type"`
+	RoomId    string                     `json:"room_id"`
+	ChatId    string                     `json:"chat_id"`
+	Chat      notification.ChatReadModel `json:"chat"`
 }
 
 var upgrader = websocket.Upgrader{
@@ -100,7 +100,7 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 	}()
 
 	go client.Receive(func(msg []byte) {
-		e := &readmodel.ChatRedisEvent{}
+		e := &notification.ChatRedisEvent{}
 		if err := json.Unmarshal(msg, e); err != nil {
 			log.Println("Unmarshal err:", err)
 		}
@@ -108,21 +108,21 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 		var wsChatEvent = &WsChatEvent{}
 
 		switch e.Type {
-		case readmodel.EventTypeCreated:
+		case notification.EventTypeCreated:
 			wsChatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.Payload.RoomID.String(),
 				ChatId:    e.Payload.ID.String(),
 				Chat:      *e.Payload,
 			}
-		case readmodel.EventTypeUpdated:
+		case notification.EventTypeUpdated:
 			wsChatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.Payload.RoomID.String(),
 				ChatId:    e.Payload.ID.String(),
 				Chat:      *e.Payload,
 			}
-		case readmodel.EventTypeDeleted:
+		case notification.EventTypeDeleted:
 			wsChatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.RoomID.String(),
