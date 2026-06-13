@@ -1,0 +1,191 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: chat-app-config
+data:
+  KAFKA_BROKERS: host.docker.internal:9092
+  REDIS_ADDR: host.docker.internal:6379
+  SCYLLA_HOST: host.docker.internal
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-api-command
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-api-command
+  template:
+    metadata:
+      labels:
+        app: chat-api-command
+    spec:
+      containers:
+        - name: app
+          image: boardroom/api-command:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chat-app-config
+          env:
+            - name: PORT
+              value: "8080"
+          ports:
+            - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-api-command
+spec:
+  selector:
+    app: chat-api-command
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-api-query
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-api-query
+  template:
+    metadata:
+      labels:
+        app: chat-api-query
+    spec:
+      containers:
+        - name: app
+          image: boardroom/api-query:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chat-app-config
+          env:
+            - name: PORT
+              value: "8081"
+          ports:
+            - containerPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-api-query
+spec:
+  selector:
+    app: chat-api-query
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-ws
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-ws
+  template:
+    metadata:
+      labels:
+        app: chat-ws
+    spec:
+      containers:
+        - name: app
+          image: boardroom/ws:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chat-app-config
+          env:
+            - name: PORT
+              value: "8082"
+          ports:
+            - containerPort: 8082
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-ws
+spec:
+  selector:
+    app: chat-ws
+  ports:
+    - name: ws
+      port: 8082
+      targetPort: 8082
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-consumer-notifier
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-consumer-notifier
+  template:
+    metadata:
+      labels:
+        app: chat-consumer-notifier
+    spec:
+      containers:
+        - name: app
+          image: boardroom/consumer-notifier:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chat-app-config
+          env:
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: KAFKA_BROKERS
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: REDIS_ADDR
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: chat-consumer-chat
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: chat-consumer-chat
+  template:
+    metadata:
+      labels:
+        app: chat-consumer-chat
+    spec:
+      containers:
+        - name: app
+          image: boardroom/consumer-chat:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: chat-app-config
+          env:
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: KAFKA_BROKERS
+            - name: SCYLLA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: SCYLLA_HOST

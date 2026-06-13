@@ -1,26 +1,12 @@
-z_run-command:
-	cd backend/chat/cmd/api-command && PORT=8080 go run .
+CHAT_MAKE := $(MAKE) -C backend/chat
+PKG_MAKE := $(MAKE) -C backend/pkg
 
-z_run-query:
-	cd backend/chat/cmd/api-query && PORT=8081 go run .
+# chat は root からは一括操作のみ
+run-chat:
+	$(CHAT_MAKE) run-backend
 
-z_run-ws:
-	cd backend/chat/cmd/ws && PORT=8082 go run .
-
-z_run-consumer-notifier:
-	cd backend/chat/cmd/consumer-notifier && go run .
-
-z_run-consumer-chat:
-	cd backend/chat/cmd/consumer-chat && go run .
-
-run-backend:
-	trap 'kill 0' SIGINT SIGTERM EXIT; \
-	($(MAKE) z_run-command 2>&1 | sed 's/^/[command-api] /') & \
-	($(MAKE) z_run-query 2>&1 | sed 's/^/[query-api]  /') & \
-	($(MAKE) z_run-ws 2>&1 | sed 's/^/[ws]         /') & \
-	($(MAKE) z_run-consumer-notifier 2>&1 | sed 's/^/[notifier]  /') & \
-	($(MAKE) z_run-consumer-chat 2>&1 | sed 's/^/[consumer]  /') & \
-	wait
+# 互換エイリアス
+run-backend: run-chat
 
 migrate-scylla:
 	cd appinfra && docker compose up -d scylla
@@ -41,23 +27,66 @@ kill-backend:
 	pkill -f "go-build.*/exe/main" || true
 
 tidy-go-mod:
-	cd backend/pkg/shared && go mod tidy
-	cd backend/chat/internal/domain && go mod tidy
-	cd backend/chat/internal/readmodel && go mod tidy
-	cd backend/chat/internal/notification && go mod tidy
-	cd backend/chat/cmd/api-command && go mod tidy
-	cd backend/chat/cmd/api-query && go mod tidy
-	cd backend/chat/cmd/ws && go mod tidy
-	cd backend/chat/cmd/consumer-notifier && go mod tidy
-	cd backend/chat/cmd/consumer-chat && go mod tidy
+	$(PKG_MAKE) tidy-go-mod
+	$(CHAT_MAKE) tidy-go-mod
 
 go-deps-update:
-	cd backend/pkg/shared && go get -u ./... && go mod tidy
-	cd backend/chat/internal/domain && go get -u ./... && go mod tidy
-	cd backend/chat/internal/readmodel && go get -u ./... && go mod tidy
-	cd backend/chat/internal/notification && go get -u ./... && go mod tidy
-	cd backend/chat/cmd/api-command && go get -u ./... && go mod tidy
-	cd backend/chat/cmd/api-query && go get -u ./... && go mod tidy
-	cd backend/chat/cmd/ws && go get -u ./... && go mod tidy
-	cd backend/chat/cmd/consumer-notifier && go get -u ./... && go mod tidy
-	cd backend/chat/cmd/consumer-chat && go get -u ./... && go mod tidy
+	$(PKG_MAKE) go-deps-update
+	$(CHAT_MAKE) go-deps-update
+
+# chat の Docker image はまとめてビルド
+build-chat-images:
+	$(CHAT_MAKE) docker-build-all
+
+# 互換エイリアス
+docker-build-all: build-chat-images
+
+# chat image をOrbStack k8sへload
+load-chat-images:
+	$(CHAT_MAKE) load-orb-all
+
+build-and-load-chat-images:
+	$(CHAT_MAKE) docker-build-and-load-all
+
+# 互換エイリアス
+orb-load-all: load-chat-images
+
+k8s-apply:
+	$(CHAT_MAKE) k8s-apply
+
+k8s-delete:
+	$(CHAT_MAKE) k8s-delete
+
+k8s-restart:
+	$(CHAT_MAKE) k8s-restart
+
+k8s-status:
+	$(CHAT_MAKE) k8s-status
+
+k8s-logs:
+	$(CHAT_MAKE) k8s-logs
+
+k8s-endpoints:
+	$(CHAT_MAKE) k8s-endpoints
+
+k8s-port-forward-start:
+	$(CHAT_MAKE) k8s-port-forward-start
+
+k8s-port-forward-stop:
+	$(CHAT_MAKE) k8s-port-forward-stop
+
+k8s-port-forward-status:
+	$(CHAT_MAKE) k8s-port-forward-status
+
+# build + apply + restart + status
+k8s-deploy:
+	$(CHAT_MAKE) k8s-deploy
+
+compose-backend-up:
+	$(CHAT_MAKE) compose-up
+
+compose-backend-down:
+	$(CHAT_MAKE) compose-down
+
+compose-backend-logs:
+	$(CHAT_MAKE) compose-logs

@@ -1,8 +1,22 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 export const WebSocketContext = createContext<WebSocket | null>(null);
-// @ts-ignore
-const wsUrl = import.meta.env.VITE_REACT_APP_WS_BASE_URL;
+
+const normalizeWsUrl = (value: string | undefined) => {
+  if (!value || value.trim() === "") return "/ws";
+  return value.trim();
+};
+
+const wsBase = normalizeWsUrl(import.meta.env.VITE_REACT_APP_WS_BASE_URL);
+
+const resolveWsUrl = () => {
+  if (wsBase.startsWith("ws://") || wsBase.startsWith("wss://")) {
+    return wsBase;
+  }
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const path = wsBase.startsWith("/") ? wsBase : `/${wsBase}`;
+  return `${protocol}//${window.location.host}${path}`;
+};
 
 export const useWebSocket = () => {
   const context = useContext(WebSocketContext);
@@ -32,7 +46,7 @@ export const WebSocketProvider = (
       setSocket(null);
     }
 
-    const ws = new WebSocket(wsUrl);
+    const ws = new WebSocket(resolveWsUrl());
     ws.addEventListener("open", () => {
       console.log("WebSocket connection established");
       socketRef.current = ws;

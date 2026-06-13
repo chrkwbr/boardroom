@@ -5,6 +5,7 @@ import (
 	"chat-ws/internal/processor"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -46,9 +47,17 @@ func main() {
 	}
 }
 
+func redisAddr() string {
+	addr := strings.TrimSpace(os.Getenv("REDIS_ADDR"))
+	if addr == "" {
+		return "localhost:6379"
+	}
+	return addr
+}
+
 func Init() {
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr(),
 		Password: "",
 		DB:       0,
 	})

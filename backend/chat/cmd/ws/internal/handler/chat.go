@@ -99,31 +99,39 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 		}
 	}()
 
-	go client.Receive(func(msg []byte) {
+	go client.Receive(receive(conn))
+
+	conn.SetPingHandler(func(string) error {
+		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(time.Second))
+	})
+}
+
+func receive(conn *websocket.Conn) func([]byte) {
+	return func(msg []byte) {
 		e := &notification.ChatRedisEvent{}
 		if err := json.Unmarshal(msg, e); err != nil {
 			log.Println("Unmarshal err:", err)
 		}
 
-		var wsChatEvent = &WsChatEvent{}
+		var chatEvent = &WsChatEvent{}
 
 		switch e.Type {
 		case notification.EventTypeCreated:
-			wsChatEvent = &WsChatEvent{
+			chatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.Payload.RoomID.String(),
 				ChatId:    e.Payload.ID.String(),
 				Chat:      *e.Payload,
 			}
 		case notification.EventTypeUpdated:
-			wsChatEvent = &WsChatEvent{
+			chatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.Payload.RoomID.String(),
 				ChatId:    e.Payload.ID.String(),
 				Chat:      *e.Payload,
 			}
 		case notification.EventTypeDeleted:
-			wsChatEvent = &WsChatEvent{
+			chatEvent = &WsChatEvent{
 				EventType: e.Type,
 				RoomId:    e.RoomID.String(),
 				ChatId:    e.ChatID.String(),
@@ -133,13 +141,9 @@ func (ws *ChatWebSocket) handleWebSocketChat(c *gin.Context) {
 			return
 		}
 
-		if err := conn.WriteJSON(wsChatEvent); err != nil {
+		if err := conn.WriteJSON(chatEvent); err != nil {
 			log.Println("WebSocket write error:", err)
 			return
 		}
-	})
-
-	conn.SetPingHandler(func(string) error {
-		return conn.WriteControl(websocket.PongMessage, []byte{}, time.Now().Add(time.Second))
-	})
+	}
 }
