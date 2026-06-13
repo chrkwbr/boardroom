@@ -41,9 +41,9 @@ const ChatRoom = () => {
     };
     EventEmitter.on("chat_edited", editChatListener);
 
-    const deleteChatListener = (event: { roomId: string; chat: IChat }) => {
+    const deleteChatListener = (event: { roomId: string; chatId: string }) => {
       if (event.roomId !== roomId) return;
-      deleteChat(event.chat);
+      deleteChat(event.chatId);
     };
     EventEmitter.on("chat_deleted", deleteChatListener);
 
@@ -83,10 +83,10 @@ const ChatRoom = () => {
     setData([...updatedData]);
   };
 
-  const deleteChat = (chat: IChat) => {
-    const index = dataRef.current.findIndex((c) => c.id === chat.id);
+  const deleteChat = (chatId: string) => {
+    const index = dataRef.current.findIndex((c) => c.id === chatId);
     if (index === -1) {
-      console.log("skip not found", chat.id);
+      console.log("skip not found", chatId);
       return;
     }
     const updatedData = [...dataRef.current];
@@ -99,7 +99,7 @@ const ChatRoom = () => {
     (async () => {
       const newChat: IPostChat = {
         id: null,
-        sender: "You",
+        sender: "550e8400-e29b-41d4-a716-446655440000",
         room: roomId!,
         message: chat,
       };

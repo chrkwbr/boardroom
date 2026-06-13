@@ -3,7 +3,7 @@ import { IChat } from "../organisms/chat/IChats.ts";
 type EventTypes = {
   "chat_created": { roomId: string; chat: IChat };
   "chat_edited": { roomId: string; chat: IChat };
-  "chat_deleted": { roomId: string; chat: IChat };
+  "chat_deleted": { roomId: string; chatId: string };
   "notification": { message: string };
 };
 

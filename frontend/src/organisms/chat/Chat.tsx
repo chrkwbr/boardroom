@@ -59,12 +59,12 @@ const Chat = (props: { chat: IChat }) => {
   return (
     <>
       <div>
-        <img className="size-10 rounded-box" src={props.chat.image} />
+        <img className="size-10 rounded-box" src={props.chat.sender.icon} />
       </div>
       <div>
-        <div>{props.chat.sender}</div>
+        <div>{props.chat.sender.name}</div>
         <div className="text-xs uppercase font-semibold opacity-60">
-          {formatDateToIsoDateTime(props.chat.date)}
+          {formatDateToIsoDateTime(props.chat.createdAt)}
           {isEdited() && <CHatEditHistory chatId={props.chat.id!} />}
         </div>
       </div>
