@@ -81,3 +81,12 @@ k8s-port-forward-status:
 # build + apply + restart + status
 k8s-deploy:
 	$(CHAT_MAKE) k8s-deploy
+
+compose-backend-up:
+	$(CHAT_MAKE) compose-up
+
+compose-backend-down:
+	$(CHAT_MAKE) compose-down
+
+compose-backend-logs:
+	$(CHAT_MAKE) compose-logs

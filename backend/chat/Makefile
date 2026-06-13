@@ -200,3 +200,14 @@ k8s-port-forward-status:
 
 # build → image確認 → manifest適用 → rollout restart → status まで一括
 k8s-deploy: docker-build-and-load-all k8s-apply k8s-restart k8s-status
+
+.PHONY: compose-up compose-down compose-logs
+
+compose-up:
+	cd .. && docker compose -f compose.yml up -d --build
+
+compose-down:
+	cd .. && docker compose -f compose.yml down
+
+compose-logs:
+	cd .. && docker compose -f compose.yml logs -f --tail=100
