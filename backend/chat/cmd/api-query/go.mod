@@ -48,4 +48,4 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 )
 
-replace boardroom/chat-shared => ../../pkg/shared
+replace boardroom/chat-shared => ../../../pkg/shared

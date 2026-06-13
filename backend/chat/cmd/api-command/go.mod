@@ -45,4 +45,4 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-replace boardroom/chat-shared => ../../pkg/shared
+replace boardroom/chat-shared => ../../../pkg/shared
