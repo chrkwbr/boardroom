@@ -80,6 +80,11 @@ func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
 		log.Println("Failed to insert chat to ScyllaDB:", err)
 		return
 	}
+
+	if err := m.scylla.InsertHistory(ctx, model, readmodel.Created); err != nil {
+		log.Println("Failed to insert history to ScyllaDB:", err)
+		return
+	}
 }
 
 func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
@@ -89,7 +94,7 @@ func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 		return
 	}
 
-	orig, err := m.scylla.GetChatByID(ctx, p.ID)
+	orig, err := m.scylla.GetChat(ctx, p.RoomID, p.ID)
 	if err != nil {
 		log.Println("Failed to get original chat from ScyllaDB:", err)
 		return
@@ -101,6 +106,11 @@ func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 		log.Println("Failed to update chat in ScyllaDB:", err)
 		return
 	}
+
+	if err := m.scylla.InsertHistory(ctx, edited, readmodel.Edited); err != nil {
+		log.Println("Failed to insert history in ScyllaDB:", err)
+		return
+	}
 }
 
 func (m *Materializer) onDelete(ctx context.Context, event *domain.ChatEvent) {
@@ -110,13 +120,19 @@ func (m *Materializer) onDelete(ctx context.Context, event *domain.ChatEvent) {
 		return
 	}
 
-	orig, err := m.scylla.GetChatByID(ctx, p.ID)
+	orig, err := m.scylla.GetChat(ctx, p.RoomID, p.ID)
 	if err != nil {
 		log.Println("Failed to get original chat from ScyllaDB:", err)
 		return
 	}
+	del := orig.NewDelete()
 
-	if err := m.scylla.DeleteChat(ctx, orig.RoomID, orig.ID); err != nil {
+	if err := m.scylla.DeleteChat(ctx, p.RoomID, p.ID); err != nil {
 		log.Println("Failed to delete chat from ScyllaDB:", err)
+	}
+
+	if err = m.scylla.InsertHistory(ctx, del, readmodel.Deleted); err != nil {
+		log.Println("Failed to insert history in ScyllaDB:", err)
+		return
 	}
 }

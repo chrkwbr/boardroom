@@ -71,9 +71,9 @@ services:
       "
       echo 'Waiting for ScyllaDB...'
       until cqlsh scylla 9042 -e 'describe cluster' > /dev/null 2>&1; do sleep 2; done
-      echo 'Applying init.cql...'
-      cqlsh scylla 9042 -f /init.cql
-      echo 'Done.'
+      echo 'Running migrations...'
+      SCYLLA_HOST=scylla SCYLLA_PORT=9042 /migrate.sh
       "
     volumes:
-      - ./scylla/init.cql:/init.cql
+      - ./scylla/migrate.sh:/migrate.sh
+      - ./scylla/migrations:/migrations

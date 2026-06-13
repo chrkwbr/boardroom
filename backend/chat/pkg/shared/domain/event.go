@@ -26,6 +26,7 @@ type ChatCreatedPayload struct {
 
 type ChatEditedPayload struct {
 	ID      uuid.UUID `json:"id"`
+	RoomID  uuid.UUID `json:"room_id"`
 	Message string    `json:"message"`
 }
 

@@ -23,6 +23,14 @@ run-backend:
 	($(MAKE) z_run-consumer-chat 2>&1 | sed 's/^/[consumer]  /') & \
 	wait
 
+migrate-scylla:
+	cd appinfra && docker compose up -d scylla
+	cd appinfra && docker compose run --rm --no-deps scylla-init
+
+# ローカルに cqlsh を入れている場合のみ使用
+migrate-scylla-local:
+	MIGRATIONS_DIR=appinfra/scylla/migrations appinfra/scylla/migrate.sh
+
 kill-backend:
 	pkill -f "cmd/chat" || true
 	pkill -f "go-build.*/exe/main" || true

@@ -83,6 +83,7 @@ func (c *Chat) NewCreatedEvent() *ChatEvent {
 func (c *Chat) NewUpdatedEvent() *ChatEvent {
 	p := ChatEditedPayload{
 		ID:      c.ID,
+		RoomID:  c.RoomID,
 		Message: c.Message,
 	}
 	jsonChat, err := json.Marshal(p)
