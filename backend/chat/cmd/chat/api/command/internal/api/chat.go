@@ -34,61 +34,75 @@ func (con *ChatCommandController) RegisterRoutes(r *gin.RouterGroup) {
 	}
 }
 
-func (con *ChatCommandController) postChat(c *gin.Context) {
+func (con *ChatCommandController) postChat(ctx *gin.Context) {
 	var newChat ChatRequest
-	if err := c.ShouldBindJSON(&newChat); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&newChat); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	senderID, err := uuid.Parse(newChat.SenderID)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "sender must be a valid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "sender must be a valid UUID"})
 		return
 	}
 
-	roomID, err := uuid.Parse(c.Param("roomId"))
+	roomID, err := uuid.Parse(ctx.Param("roomId"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
 	}
 
 	if err := con.chatUseCase.CreateChat(senderID, roomID, newChat.Message); err != nil {
 		log.Println("Error creating chat:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
 		return
 	}
-	c.JSON(http.StatusOK, newChat)
+	ctx.JSON(http.StatusOK, newChat)
 }
 
-func (con *ChatCommandController) editChat(c *gin.Context) {
+func (con *ChatCommandController) editChat(ctx *gin.Context) {
 	var editChat ChatRequest
-	if err := c.ShouldBindJSON(&editChat); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	if err := ctx.ShouldBindJSON(&editChat); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	roomID, err := uuid.Parse(c.Param("roomId"))
-	chatId, err := uuid.Parse(c.Param("chatId"))
+	roomID, err := uuid.Parse(ctx.Param("roomId"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-	if err := con.chatUseCase.EditChat(roomID, chatId, editChat.Message); err != nil {
-		log.Println("Error creating chat:", err)
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create chat"})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
 		return
 	}
-	c.JSON(http.StatusOK, editChat)
+
+	chatId, err := uuid.Parse(ctx.Param("chatId"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "chatId must be a valid UUID"})
+		return
+	}
+
+	if err := con.chatUseCase.EditChat(roomID, chatId, editChat.Message); err != nil {
+		log.Println("Error updating chat:", err)
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to edit chat"})
+		return
+	}
+	ctx.JSON(http.StatusOK, editChat)
 }
 
-func (con *ChatCommandController) deleteChat(context *gin.Context) {
-	chatId, err := uuid.Parse(context.Param("chatId"))
+func (con *ChatCommandController) deleteChat(ctx *gin.Context) {
+	roomID, err := uuid.Parse(ctx.Param("roomId"))
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "roomId must be a valid UUID"})
 		return
 	}
-	if err := con.chatUseCase.DeleteChat(chatId); err != nil {
+
+	chatId, err := uuid.Parse(ctx.Param("chatId"))
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "chatId must be a valid UUID"})
+		return
+	}
+
+	if err := con.chatUseCase.DeleteChat(roomID, chatId); err != nil {
 		log.Println("Error deleting chat:", err)
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete chat"})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete chat"})
 		return
 	}
-	context.JSON(http.StatusOK, gin.H{"message": "chat deleted successfully"})
+	ctx.JSON(http.StatusOK, gin.H{"message": "chat deleted successfully"})
 }

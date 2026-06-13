@@ -24,7 +24,11 @@ func (uc *ChatUseCase) CreateChat(senderID uuid.UUID, roomID uuid.UUID, message 
 	// ToDo validation
 	// sender が room に属しているか
 	chat := domain.NewChat(senderID, roomID, message)
-	event := chat.NewCreatedEvent()
+	event, err := domain.NewCreatedEvent(chat)
+	if err != nil {
+		return err
+	}
+
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
 		return err
@@ -41,7 +45,11 @@ func (uc *ChatUseCase) EditChat(roomID uuid.UUID, chatId uuid.UUID, message stri
 	// sender が room に属しているか
 	// chatId の投稿者が同一か
 	chat := domain.NewEditedChat(chatId, uuid.Nil, roomID, message)
-	event := chat.NewUpdatedEvent()
+	event, err := domain.NewUpdatedEvent(chat)
+	if err != nil {
+		return err
+	}
+
 	eventJSON, err := json.Marshal(event)
 	if err != nil {
 		return err
@@ -51,38 +59,21 @@ func (uc *ChatUseCase) EditChat(roomID uuid.UUID, chatId uuid.UUID, message stri
 	return nil
 }
 
-func (uc *ChatUseCase) DeleteChat(chatId uuid.UUID) interface{} {
-	//var marshaledEvent []byte
-	//if err := uc.txManager.RunWithTx(func(tx *sql.Tx) error {
-	//	chatEvent, err := uc.chatRepository.Fetch(chatId, tx)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	var chat domain.Chat
-	//	if err := json.Unmarshal(chatEvent.Payload, &chat); err != nil {
-	//		return err
-	//	}
-	//	chat.Version = chat.Version + 1
-	//
-	//	event := chat.AsDeleteEvent()
-	//	eventId, err := uc.chatRepository.Save(&event, tx)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	outbox := domain.AsOutbox(eventId, event)
-	//	_, err = uc.chatOutboxRepository.Save(&outbox, tx)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	marshaledEvent, _ = json.Marshal(&event)
-	//	return nil
-	//}); err != nil {
-	//	return err
-	//}
-	//outboxHub, err := hub.GetHubFactory().GetHub(hub.ChatEventOutbox)
-	//if err != nil {
-	//	return err
-	//}
-	//outboxHub.BroadcastMessage(marshaledEvent)
+func (uc *ChatUseCase) DeleteChat(roomID uuid.UUID, chatId uuid.UUID) error {
+	// ToDo validation
+	// sender が room に属しているか
+	// chatId の投稿者が同一か
+	del, err := domain.NewDeletedEvent(roomID, chatId)
+	if err != nil {
+		return err
+	}
+
+	eventJSON, err := json.Marshal(del)
+	if err != nil {
+		return err
+	}
+	if err := uc.publisher.Publish("chat-events", roomID.String(), eventJSON); err != nil {
+		return err
+	}
 	return nil
 }
