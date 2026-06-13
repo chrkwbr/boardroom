@@ -4,7 +4,8 @@ PORT_WS ?= 8082
 
 .PHONY: run-command run-query run-ws run-consumer-notifier run-consumer-chat run-backend \
 	tidy-go-mod go-deps-update \
-	docker-build-api-command docker-build-api-query docker-build-ws docker-build-consumer-notifier docker-build-consumer-chat docker-build-all
+	docker-build-api-command docker-build-api-query docker-build-ws docker-build-consumer-notifier docker-build-consumer-chat docker-build-all \
+	load-orb-api-command load-orb-api-query load-orb-ws load-orb-consumer-notifier load-orb-consumer-chat load-orb-all docker-build-and-load-all
 
 run-command:
 	cd cmd/api-command && PORT=$(PORT_COMMAND) go run .
@@ -51,19 +52,19 @@ go-deps-update:
 	cd cmd/consumer-chat && go get -u ./... && go mod tidy
 
 docker-build-api-command:
-	docker build -f backend/chat/cmd/api-command/Dockerfile -t boardroom/api-command:latest ../..
+	docker build -f cmd/api-command/Dockerfile -t boardroom/api-command:latest ../..
 
 docker-build-api-query:
-	docker build -f backend/chat/cmd/api-query/Dockerfile -t boardroom/api-query:latest ../..
+	docker build -f cmd/api-query/Dockerfile -t boardroom/api-query:latest ../..
 
 docker-build-ws:
-	docker build -f backend/chat/cmd/ws/Dockerfile -t boardroom/ws:latest ../..
+	docker build -f cmd/ws/Dockerfile -t boardroom/ws:latest ../..
 
 docker-build-consumer-notifier:
-	docker build -f backend/chat/cmd/consumer-notifier/Dockerfile -t boardroom/consumer-notifier:latest ../..
+	docker build -f cmd/consumer-notifier/Dockerfile -t boardroom/consumer-notifier:latest ../..
 
 docker-build-consumer-chat:
-	docker build -f backend/chat/cmd/consumer-chat/Dockerfile -t boardroom/consumer-chat:latest ../..
+	docker build -f cmd/consumer-chat/Dockerfile -t boardroom/consumer-chat:latest ../..
 
 docker-build-all: \
 	docker-build-api-command \
@@ -72,3 +73,37 @@ docker-build-all: \
 	docker-build-consumer-notifier \
 	docker-build-consumer-chat
 
+.PHONY: ensure-orb-image load-orb-api-command load-orb-api-query load-orb-ws load-orb-consumer-notifier load-orb-consumer-chat load-orb-all docker-build-and-load-all
+
+ensure-orb-image:
+	@docker image inspect $(IMAGE) >/dev/null 2>&1 || (echo "[error] image not found: $(IMAGE)"; echo "        run: make docker-build-all"; exit 1)
+
+load-orb-api-command: IMAGE=boardroom/api-command:latest
+load-orb-api-command: ensure-orb-image
+	@echo "[orb] using local image: $(IMAGE)"
+
+load-orb-api-query: IMAGE=boardroom/api-query:latest
+load-orb-api-query: ensure-orb-image
+	@echo "[orb] using local image: $(IMAGE)"
+
+load-orb-ws: IMAGE=boardroom/ws:latest
+load-orb-ws: ensure-orb-image
+	@echo "[orb] using local image: $(IMAGE)"
+
+load-orb-consumer-notifier: IMAGE=boardroom/consumer-notifier:latest
+load-orb-consumer-notifier: ensure-orb-image
+	@echo "[orb] using local image: $(IMAGE)"
+
+load-orb-consumer-chat: IMAGE=boardroom/consumer-chat:latest
+load-orb-consumer-chat: ensure-orb-image
+	@echo "[orb] using local image: $(IMAGE)"
+
+load-orb-all: \
+	load-orb-api-command \
+	load-orb-api-query \
+	load-orb-ws \
+	load-orb-consumer-notifier \
+	load-orb-consumer-chat
+	@echo "[orb] image check complete. Deploy with imagePullPolicy: IfNotPresent or Never."
+
+docker-build-and-load-all: docker-build-all load-orb-all

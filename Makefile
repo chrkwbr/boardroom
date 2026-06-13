@@ -40,3 +40,13 @@ build-chat-images:
 
 # 互換エイリアス
 docker-build-all: build-chat-images
+
+# chat image をOrbStack k8sへload
+load-chat-images:
+	$(CHAT_MAKE) load-orb-all
+
+build-and-load-chat-images:
+	$(CHAT_MAKE) docker-build-and-load-all
+
+# 互換エイリアス
+orb-load-all: load-chat-images
