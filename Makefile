@@ -86,7 +86,7 @@ compose-backend-up:
 	$(CHAT_MAKE) compose-up
 
 compose-backend-up-build:
-	$(CHAT_MAKE) compose-build-up
+	$(CHAT_MAKE) compose-up-build
 
 compose-backend-down:
 	$(CHAT_MAKE) compose-down

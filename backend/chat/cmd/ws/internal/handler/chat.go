@@ -34,12 +34,12 @@ var upgrader = websocket.Upgrader{
 }
 
 func (ws *ChatWebSocket) RegisterRoutes(r *gin.RouterGroup) {
-	chatGroup := r.Group("/")
-	{
-		chatGroup.GET("", func(c *gin.Context) {
-			ws.handleWebSocketChat(c)
-		})
-	}
+	r.GET("", func(c *gin.Context) {
+		ws.handleWebSocketChat(c)
+	})
+	r.GET("/", func(c *gin.Context) {
+		ws.handleWebSocketChat(c)
+	})
 }
 
 var activeSockets = struct {

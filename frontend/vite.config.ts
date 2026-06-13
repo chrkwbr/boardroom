@@ -9,17 +9,15 @@ export default defineConfig({
   server: {
     proxy: {
       "/api/command": {
-        target: "http://localhost:8080",
+        target: "http://localhost:8088",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/command/, "/api"),
       },
       "/api/query": {
-        target: "http://localhost:8081",
+        target: "http://localhost:8088",
         changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/api\/query/, "/api"),
       },
       "/ws": {
-        target: "ws://localhost:8082",
+        target: "ws://localhost:8088",
         ws: true,
       },
     },

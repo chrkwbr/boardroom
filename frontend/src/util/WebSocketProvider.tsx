@@ -3,8 +3,18 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 export const WebSocketContext = createContext<WebSocket | null>(null);
 
 const normalizeWsUrl = (value: string | undefined) => {
-  if (!value || value.trim() === "") return "/ws";
-  return value.trim();
+  if (!value) return "/ws";
+
+  // Accept values like '"ws://..."' or "'ws://...'" from .env
+  const trimmed = value.trim().replace(/^['"]|['"]$/g, "");
+  if (trimmed === "") return "/ws";
+
+  // Normalize trailing slash to avoid mismatched WS routes (/ws vs /ws/)
+  if (trimmed.length > 1 && trimmed.endsWith("/")) {
+    return trimmed.slice(0, -1);
+  }
+
+  return trimmed;
 };
 
 const wsBase = normalizeWsUrl(import.meta.env.VITE_REACT_APP_WS_BASE_URL);
@@ -19,11 +29,7 @@ const resolveWsUrl = () => {
 };
 
 export const useWebSocket = () => {
-  const context = useContext(WebSocketContext);
-  if (!context) {
-    throw new Error("WebSocketContext is not provided");
-  }
-  return context;
+  return useContext(WebSocketContext);
 };
 
 export const WebSocketProvider = (
@@ -71,10 +77,6 @@ export const WebSocketProvider = (
       }
     };
   }, []);
-
-  if (!socket) {
-    return <></>;
-  }
 
   return (
     <WebSocketContext.Provider value={socket}>

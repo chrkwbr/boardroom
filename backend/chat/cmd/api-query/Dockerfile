@@ -4,7 +4,7 @@ FROM golang:1.25 AS builder
 WORKDIR /workspace
 COPY . .
 
-WORKDIR /workspace/backend/chat/cmd/api-query
+WORKDIR /workspace/chat/cmd/api-query
 RUN go mod download
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags="-s -w" -o /out/api-query .
 

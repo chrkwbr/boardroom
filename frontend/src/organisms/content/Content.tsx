@@ -17,6 +17,8 @@ const Content = () => {
   const socket = useWebSocket();
 
   useEffect(() => {
+    if (!socket) return;
+
     const chatHandler = (event: MessageEvent) => {
       try {
         const eventData = JSON.parse(event.data);
