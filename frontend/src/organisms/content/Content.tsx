@@ -54,8 +54,8 @@ const Content = () => {
             break;
           case "deleted":
             EventEmitter.emit("chat_deleted", {
-              roomId: chatEvent.chat.roomId,
-              chatId: null,
+              roomId: chatEvent.room_id,
+              chatId: chatEvent.chat_id
             });
             break;
         }

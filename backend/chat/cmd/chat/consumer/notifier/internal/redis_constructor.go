@@ -153,7 +153,7 @@ func (rc *RedisConstructor) onDelete(ctx context.Context, event *domain.ChatEven
 		return
 	}
 
-	e := readmodel.NewChatDeletedEvent(p.ID, p.RoomID)
+	e := readmodel.NewChatDeletedEvent(p.RoomID, p.ID)
 	if err := rc.repo.PublishChatEvent(ctx, orig.RoomID, e); err != nil {
 		log.Println("Failed to publish chat event:", err)
 	}
