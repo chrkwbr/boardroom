@@ -41,6 +41,8 @@ kill-backend:
 	pkill -f "go-build.*/exe/main" || true
 
 tidy-go-mod:
+	cd backend/pkg/shared && go mod tidy
+	cd backend/chat/internal/domain && go mod tidy
 	cd backend/chat/internal/readmodel && go mod tidy
 	cd backend/chat/internal/notification && go mod tidy
 	cd backend/chat/cmd/api-command && go mod tidy
