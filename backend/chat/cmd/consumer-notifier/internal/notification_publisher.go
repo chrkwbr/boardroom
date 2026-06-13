@@ -67,15 +67,14 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, evt *event.Ch
 		return
 	}
 
-	// ToDo: sender 情報は将来的に User サービスから取得
-	model := &notification.ChatReadModel{
+	// ToDo: sender 情報は将来的に Redis から取得
+	model := &notification.Chat{
 		ID: p.ID,
-		//Sender: notification.User{
-		//	ID:   p.SenderID,
-		//	Name: "test name",
-		//	Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
-		//},
-		SenderID:  p.SenderID,
+		Sender: notification.User{
+			ID:   p.SenderID,
+			Name: "test name",
+			Icon: "https://img.daisyui.com/images/profile/demo/1@94.webp",
+		},
 		RoomID:    p.RoomID,
 		Message:   p.Message,
 		Version:   p.Version,

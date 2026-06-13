@@ -28,19 +28,19 @@ const (
 )
 
 // Chat
-func (r *ChatRedisRepository) GetChat(ctx context.Context, chatId uuid.UUID) (*ChatReadModel, error) {
+func (r *ChatRedisRepository) GetChat(ctx context.Context, chatId uuid.UUID) (*Chat, error) {
 	result, err := r.redis.Get(ctx, fmt.Sprintf(FormatChatKey, chatId)).Result()
 	if err != nil {
 		return nil, err
 	}
-	readModel := &ChatReadModel{}
+	readModel := &Chat{}
 	if err := json.Unmarshal([]byte(result), readModel); err != nil {
 		return nil, err
 	}
 	return readModel, nil
 }
 
-func (r *ChatRedisRepository) SetChat(ctx context.Context, model *ChatReadModel) error {
+func (r *ChatRedisRepository) SetChat(ctx context.Context, model *Chat) error {
 	key := fmt.Sprintf(FormatChatKey, model.ID)
 	payload, err := json.Marshal(model)
 	if err != nil {
@@ -65,7 +65,7 @@ func (r *ChatRedisRepository) PublishChatEvent(ctx context.Context, roomId uuid.
 	return nil
 }
 
-//	func (r *ChatRedisRepository) SetArgsChat(ctx context.Context, chatEvent *domain.ChatEvent) (*query.ChatReadModel, error) {
+//	func (r *ChatRedisRepository) SetArgsChat(ctx context.Context, chatEvent *domain.ChatEvent) (*query.Chat, error) {
 //		key := fmt.Sprintf(FormatChatKey, chatEvent.ID)
 //		readModel, err := query.FromPayload(chatEvent)
 //		if err != nil {
@@ -84,7 +84,7 @@ func (r *ChatRedisRepository) PublishChatEvent(ctx context.Context, roomId uuid.
 //			return nil, err
 //		}
 //
-//		preview := &query.ChatReadModel{}
+//		preview := &query.Chat{}
 //		if err := json.Unmarshal([]byte(previewChat), &preview); err != nil {
 //			return nil, err
 //		}
@@ -101,7 +101,7 @@ func (r *ChatRedisRepository) DelChat(ctx context.Context, chatId uuid.UUID) err
 }
 
 // Room Chat IDs
-func (r *ChatRedisRepository) ZAddNXRoomChatIds(ctx context.Context, model *ChatReadModel) error {
+func (r *ChatRedisRepository) ZAddNXRoomChatIds(ctx context.Context, model *Chat) error {
 	chatRoomKey := fmt.Sprintf(FormatCHatIdsKey, model.RoomID)
 	z := redis.Z{
 		Score:  float64(model.CreatedAt),
@@ -122,7 +122,7 @@ func (r *ChatRedisRepository) ZRemRoomChatIds(ctx context.Context, roomId uuid.U
 }
 
 // History
-func (r *ChatRedisRepository) LPushHistory(ctx context.Context, model *ChatReadModel) error {
+func (r *ChatRedisRepository) LPushHistory(ctx context.Context, model *Chat) error {
 	m, err := json.Marshal(model)
 	if err != nil {
 		return err

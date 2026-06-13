@@ -13,13 +13,13 @@ const (
 )
 
 type ChatRedisEvent struct {
-	Type    EventType      `json:"type"`
-	RoomID  uuid.UUID      `json:"roomID"`
-	ChatID  uuid.UUID      `json:"chatID"`
-	Payload *ChatReadModel `json:"payload,omitempty"`
+	Type    EventType `json:"type"`
+	RoomID  uuid.UUID `json:"roomID"`
+	ChatID  uuid.UUID `json:"chatID"`
+	Payload *Chat     `json:"payload,omitempty"`
 }
 
-func NewChatCreatedEvent(r ChatReadModel) *ChatRedisEvent {
+func NewChatCreatedEvent(r Chat) *ChatRedisEvent {
 	return &ChatRedisEvent{
 		Type:    EventTypeCreated,
 		RoomID:  r.RoomID,
@@ -28,7 +28,7 @@ func NewChatCreatedEvent(r ChatReadModel) *ChatRedisEvent {
 	}
 }
 
-func NewChatEditedEvent(r ChatReadModel) *ChatRedisEvent {
+func NewChatEditedEvent(r Chat) *ChatRedisEvent {
 	return &ChatRedisEvent{
 		Type:    EventTypeUpdated,
 		RoomID:  r.RoomID,

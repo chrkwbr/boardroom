@@ -21,10 +21,10 @@ func NewChatWebSocket() *ChatWebSocket {
 }
 
 type WsChatEvent struct {
-	EventType notification.EventType     `json:"event_type"`
-	RoomId    string                     `json:"room_id"`
-	ChatId    string                     `json:"chat_id"`
-	Chat      notification.ChatReadModel `json:"chat"`
+	EventType notification.EventType `json:"event_type"`
+	RoomId    string                 `json:"room_id"`
+	ChatId    string                 `json:"chat_id"`
+	Chat      notification.Chat      `json:"chat"`
 }
 
 var upgrader = websocket.Upgrader{
