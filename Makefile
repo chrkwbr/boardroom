@@ -31,6 +31,12 @@ migrate-scylla:
 migrate-scylla-local:
 	MIGRATIONS_DIR=appinfra/scylla/migrations appinfra/scylla/migrate.sh
 
+# chat keyspace を削除して、マイグレーションを 0 から再適用
+reset-scylla:
+	cd appinfra && docker compose up -d scylla
+	cd appinfra && docker compose exec -T scylla cqlsh -e "DROP KEYSPACE IF EXISTS chat;"
+	$(MAKE) migrate-scylla
+
 kill-backend:
 	pkill -f "cmd/chat" || true
 	pkill -f "go-build.*/exe/main" || true
