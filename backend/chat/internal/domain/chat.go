@@ -1,6 +1,10 @@
 package domain
 
 import (
+	"boardroom/shared/event"
+	"encoding/json"
+	"time"
+
 	"github.com/google/uuid"
 )
 
@@ -34,6 +38,59 @@ func NewEditedChat(id uuid.UUID, senderId uuid.UUID, roomId uuid.UUID, message s
 		Message:  message,
 		Version:  1, // ToDo
 	}
+}
+
+func (c *Chat) NewCreatedEvent() (*event.ChatEvent, error) {
+	payload := event.ChatCreatedPayload{
+		ID:       c.ID,
+		RoomID:   c.RoomID,
+		SenderID: c.SenderID,
+		Message:  c.Message,
+		Version:  c.Version,
+	}
+	jsonChat, err := json.Marshal(payload)
+	if err != nil {
+		panic(err)
+	}
+	return &event.ChatEvent{
+		Type:       event.EventTypeCreated,
+		OccurredAt: time.Now().Unix(),
+		Payload:    jsonChat,
+	}, nil
+}
+
+func (c *Chat) NewUpdatedEvent() (*event.ChatEvent, error) {
+	p := event.ChatEditedPayload{
+		ID:      c.ID,
+		RoomID:  c.RoomID,
+		Message: c.Message,
+	}
+	jsonChat, err := json.Marshal(p)
+	if err != nil {
+		panic(err)
+	}
+	return &event.ChatEvent{
+		Type:       event.EventTypeUpdated,
+		OccurredAt: time.Now().Unix(),
+		Payload:    jsonChat,
+	}, nil
+}
+
+func NewDeletedEvent(roomId uuid.UUID, chatId uuid.UUID) (*event.ChatEvent, error) {
+	p := event.ChatDeletedPayload{
+		ID:     chatId,
+		RoomID: roomId,
+	}
+	jsonChat, err := json.Marshal(p)
+	if err != nil {
+		panic(err)
+	}
+
+	return &event.ChatEvent{
+		Type:       event.EventTypeDeleted,
+		OccurredAt: time.Now().Unix(),
+		Payload:    jsonChat,
+	}, nil
 }
 
 //func (c *Chat) AsEditEvent() ChatEvent {

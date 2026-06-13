@@ -3,6 +3,7 @@ module chat-api-command
 go 1.25.4
 
 require (
+	boardroom/chat-domain v0.0.0
 	boardroom/shared v0.0.0
 	github.com/gin-contrib/cors v1.7.7
 	github.com/gin-gonic/gin v1.12.0
@@ -45,4 +46,7 @@ require (
 	google.golang.org/protobuf v1.36.10 // indirect
 )
 
-replace boardroom/shared => ../../../pkg/shared
+replace (
+	boardroom/chat-domain => ../../internal/domain
+	boardroom/shared => ../../../pkg/shared
+)

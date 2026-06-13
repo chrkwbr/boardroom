@@ -2,7 +2,7 @@ package internal
 
 import (
 	"boardroom/chat-notification"
-	"boardroom/shared/domain"
+	"boardroom/shared/event"
 	"boardroom/shared/infra/pubsub"
 	"context"
 	"encoding/json"
@@ -42,27 +42,27 @@ func (rc *ChatNotificationPublisher) Start() {
 }
 
 func (rc *ChatNotificationPublisher) process(ctx context.Context, msg []byte) {
-	chatEvent := &domain.ChatEvent{}
+	chatEvent := &event.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
 		log.Println("Failed to unmarshal chat event:", err)
 		return
 	}
 
 	switch chatEvent.Type {
-	case domain.EventTypeCreated:
+	case event.EventTypeCreated:
 		rc.onCreate(ctx, chatEvent)
-	case domain.EventTypeUpdated:
+	case event.EventTypeUpdated:
 		rc.onUpdate(ctx, chatEvent)
-	case domain.EventTypeDeleted:
+	case event.EventTypeDeleted:
 		rc.onDelete(ctx, chatEvent)
 	default:
 		log.Println("Unknown event type:", chatEvent.Type)
 	}
 }
 
-func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatCreatedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatCreatedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatCreatedPayload:", err)
 		return
 	}
@@ -79,8 +79,8 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 		RoomID:    p.RoomID,
 		Message:   p.Message,
 		Version:   p.Version,
-		CreatedAt: event.OccurredAt,
-		UpdatedAt: event.OccurredAt,
+		CreatedAt: evt.OccurredAt,
+		UpdatedAt: evt.OccurredAt,
 	}
 
 	if err := rc.repo.SetChat(ctx, model); err != nil {
@@ -104,9 +104,9 @@ func (rc *ChatNotificationPublisher) onCreate(ctx context.Context, event *domain
 	//}
 }
 
-func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatEditedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatEditedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatEditedPayload:", err)
 		return
 	}
@@ -117,7 +117,7 @@ func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain
 		return
 	}
 
-	edited := orig.NewUpdate(p.Message, event.OccurredAt)
+	edited := orig.NewUpdate(p.Message, evt.OccurredAt)
 
 	if err := rc.repo.SetChat(ctx, edited); err != nil {
 		log.Println("Failed to update chat in Redis:", err)
@@ -140,9 +140,9 @@ func (rc *ChatNotificationPublisher) onUpdate(ctx context.Context, event *domain
 	//}
 }
 
-func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatDeletedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (rc *ChatNotificationPublisher) onDelete(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatDeletedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatDeletedPayload:", err)
 		return
 	}

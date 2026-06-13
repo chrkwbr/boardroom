@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"boardroom/shared/domain"
+	"boardroom/chat-domain"
 	"boardroom/shared/infra/pubsub"
 	"encoding/json"
 
@@ -24,7 +24,7 @@ func (uc *ChatUseCase) CreateChat(senderID uuid.UUID, roomID uuid.UUID, message 
 	// ToDo validation
 	// sender が room に属しているか
 	chat := domain.NewChat(senderID, roomID, message)
-	event, err := domain.NewCreatedEvent(chat)
+	event, err := chat.NewCreatedEvent()
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (uc *ChatUseCase) EditChat(roomID uuid.UUID, chatId uuid.UUID, message stri
 	// sender が room に属しているか
 	// chatId の投稿者が同一か
 	chat := domain.NewEditedChat(chatId, uuid.Nil, roomID, message)
-	event, err := domain.NewUpdatedEvent(chat)
+	event, err := chat.NewUpdatedEvent()
 	if err != nil {
 		return err
 	}

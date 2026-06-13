@@ -39,3 +39,12 @@ reset-scylla:
 kill-backend:
 	pkill -f "cmd/chat" || true
 	pkill -f "go-build.*/exe/main" || true
+
+tidy-go-mod:
+	cd backend/chat/internal/readmodel && go mod tidy
+	cd backend/chat/internal/notification && go mod tidy
+	cd backend/chat/cmd/api-command && go mod tidy
+	cd backend/chat/cmd/api-query && go mod tidy
+	cd backend/chat/cmd/ws && go mod tidy
+	cd backend/chat/cmd/consumer-notifier && go mod tidy
+	cd backend/chat/cmd/consumer-chat && go mod tidy

@@ -35,11 +35,3 @@ func (c *ChatReadModel) NewDelete() *ChatReadModel {
 		UpdatedAt: c.UpdatedAt,
 	}
 }
-
-type Status = string
-
-const (
-	Created Status = "created"
-	Edited  Status = "edited"
-	Deleted Status = "deleted"
-)

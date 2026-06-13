@@ -2,7 +2,7 @@ package internal
 
 import (
 	"boardroom/chat-readmodel"
-	"boardroom/shared/domain"
+	"boardroom/shared/event"
 	"boardroom/shared/infra/pubsub"
 	"context"
 	"encoding/json"
@@ -41,27 +41,27 @@ func (m *Materializer) Start() {
 }
 
 func (m *Materializer) process(ctx context.Context, msg []byte) {
-	chatEvent := &domain.ChatEvent{}
+	chatEvent := &event.ChatEvent{}
 	if err := json.Unmarshal(msg, chatEvent); err != nil {
 		log.Println("Failed to unmarshal chat event:", err)
 		return
 	}
 
 	switch chatEvent.Type {
-	case domain.EventTypeCreated:
+	case event.EventTypeCreated:
 		m.onCreate(ctx, chatEvent)
-	case domain.EventTypeUpdated:
+	case event.EventTypeUpdated:
 		m.onUpdate(ctx, chatEvent)
-	case domain.EventTypeDeleted:
+	case event.EventTypeDeleted:
 		m.onDelete(ctx, chatEvent)
 	default:
 		log.Println("Unknown event type:", chatEvent.Type)
 	}
 }
 
-func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatCreatedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (m *Materializer) onCreate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatCreatedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatCreatedPayload:", err)
 		return
 	}
@@ -72,8 +72,8 @@ func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
 		RoomID:    p.RoomID,
 		Message:   p.Message,
 		Version:   p.Version,
-		CreatedAt: event.OccurredAt,
-		UpdatedAt: event.OccurredAt,
+		CreatedAt: evt.OccurredAt,
+		UpdatedAt: evt.OccurredAt,
 	}
 
 	if err := m.scylla.InsertChat(ctx, model); err != nil {
@@ -87,9 +87,9 @@ func (m *Materializer) onCreate(ctx context.Context, event *domain.ChatEvent) {
 	}
 }
 
-func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatEditedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (m *Materializer) onUpdate(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatEditedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatEditedPayload:", err)
 		return
 	}
@@ -100,7 +100,7 @@ func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 		return
 	}
 
-	edited := orig.NewUpdate(p.Message, event.OccurredAt)
+	edited := orig.NewUpdate(p.Message, evt.OccurredAt)
 
 	if err := m.scylla.UpdateChat(ctx, edited); err != nil {
 		log.Println("Failed to update chat in ScyllaDB:", err)
@@ -113,9 +113,9 @@ func (m *Materializer) onUpdate(ctx context.Context, event *domain.ChatEvent) {
 	}
 }
 
-func (m *Materializer) onDelete(ctx context.Context, event *domain.ChatEvent) {
-	p := &domain.ChatDeletedPayload{}
-	if err := json.Unmarshal(event.Payload, p); err != nil {
+func (m *Materializer) onDelete(ctx context.Context, evt *event.ChatEvent) {
+	p := &event.ChatDeletedPayload{}
+	if err := json.Unmarshal(evt.Payload, p); err != nil {
 		log.Println("Failed to unmarshal ChatDeletedPayload:", err)
 		return
 	}
