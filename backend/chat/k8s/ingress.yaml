@@ -1,0 +1,49 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: chat.local
+      http:
+        paths:
+          - path: /api/chats(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: chat-api-query
+                port:
+                  number: 8081
+          - path: /ws(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: chat-ws
+                port:
+                  number: 8082
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: chat-command-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/use-regex: "true"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: chat-command.local
+      http:
+        paths:
+          - path: /api/chats(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: chat-api-command
+                port:
+                  number: 8080
+

@@ -1,110 +1,118 @@
-# Boardroom Kubernetes Runbook
+# Boardroom 起動手順（Kubernetes / OrbStack）
 
-OrbStack + kubectl で chat アプリを起動するための最小手順です。
+ローカルで chat アプリを起動するときに、毎回やることを順番でまとめています。
 
-## 1. 前提確認
+## 起動チェックリスト
+
+- [ ] OrbStack の k8s が起動している
+- [ ] `kubectl` context が `orbstack`
+- [ ] `appinfra`（Kafka/Redis/Scylla など）が起動している
+- [ ] chat イメージを build 済み
+- [ ] k8s マニフェストを apply 済み
+- [ ] frontend 用 `port-forward` が起動している
+
+## 1. 事前準備
 
 ```bash
-# OrbStack の Kubernetes クラスタを起動
+# k8s 起動
 orbctl start k8s
 
-# いま kubectl が向いているクラスタ(context)を確認
+# context 確認
 kubectl config current-context
 ```
 
-`current-context` が `orbstack` になっていることを確認します。
+`orbstack` になっていることを確認します。
 
-## 2. イメージをビルド
+## 2. インフラ起動（Kafka / Redis / Scylla / Postgres）
 
 ```bash
-cd /Users/chiharu-kuwabara/dev/boardroom
-
-# chat の各サービスイメージをローカル Docker に build
-make build-chat-images
+cd /Users/chiharu-kuwabara/dev/boardroom/appinfra
+docker compose up -d
 ```
 
-OrbStack は Docker エンジン一体型のため、ローカルで build したイメージをそのまま Kubernetes で使えます。
-
-## 3. イメージ存在チェック（任意）
+## 3. （必要時）Scylla マイグレーション
 
 ```bash
 cd /Users/chiharu-kuwabara/dev/boardroom
-
-# k8s で使う予定のローカルイメージが存在するか確認
-make orb-load-all
+make migrate-scylla
 ```
 
-このターゲットは `boardroom/*:latest` イメージの存在確認を行います。
-
-## 4. Deployment 適用
+## 4. アプリのビルドとデプロイ
 
 ```bash
 cd /Users/chiharu-kuwabara/dev/boardroom
 
-# deployment/service/configmap をクラスタへ反映（作成または更新）
-kubectl apply -f backend/chat/k8s/deployment.yaml
+# build + image確認 + apply + rollout restart + status
+make k8s-deploy
 ```
 
 ## 5. 状態確認
 
 ```bash
-# Deployment の希望状態/現在状態を確認
-kubectl get deploy
-
-# Pod の起動状態をリアルタイム監視
-kubectl get pods -w
-
-# Service の公開ポート・到達先を確認
-kubectl get svc
+cd /Users/chiharu-kuwabara/dev/boardroom
+make k8s-status
 ```
 
-## 6. ログ確認
+## 6. frontend から接続する（port-forward）
+
+`frontend/vite.config.ts` の proxy は `localhost:8080/8081/8082` を向く前提です。先に `port-forward` を起動します。
 
 ```bash
-# 各 Deployment 配下 Pod の標準出力ログを追跡
-kubectl logs deploy/chat-api-command -f
-kubectl logs deploy/chat-api-query -f
-kubectl logs deploy/chat-ws -f
-kubectl logs deploy/chat-consumer-notifier -f
-kubectl logs deploy/chat-consumer-chat -f
+cd /Users/chiharu-kuwabara/dev/boardroom
+make k8s-port-forward-start
+make k8s-port-forward-status
 ```
 
-## 7. ローカルから API を叩く（ポートフォワード）
+その後 frontend を起動します。
 
 ```bash
-# クラスタ内 Service のポートをローカルへトンネル
-kubectl port-forward svc/chat-api-command 8080:8080
-kubectl port-forward svc/chat-api-query 8081:8081
-kubectl port-forward svc/chat-ws 8082:8082
+cd /Users/chiharu-kuwabara/dev/boardroom/frontend
+deno task dev
 ```
 
-## 8. 再起動・削除
+## 7. ログ確認・再起動
 
 ```bash
-# 各 Deployment をローリング再起動（設定変更反映時など）
-kubectl rollout restart deploy/chat-api-command
-kubectl rollout restart deploy/chat-api-query
-kubectl rollout restart deploy/chat-ws
-kubectl rollout restart deploy/chat-consumer-notifier
-kubectl rollout restart deploy/chat-consumer-chat
+cd /Users/chiharu-kuwabara/dev/boardroom
+
+# 各 deployment のログ末尾を確認
+make k8s-logs
+
+# deployment を再起動
+make k8s-restart
 ```
+
+## 8. 停止/クリーンアップ
 
 ```bash
-# マニフェストで作成したリソース一式を削除
-kubectl delete -f backend/chat/k8s/deployment.yaml
+cd /Users/chiharu-kuwabara/dev/boardroom
+
+# frontend向け port-forward 停止
+make k8s-port-forward-stop
+
+# k8s リソース削除
+make k8s-delete
 ```
 
-## 9. 接続先を変更したい場合
-
-`backend/chat/k8s/deployment.yaml` の `ConfigMap` (`chat-app-config`) で以下を変更します。
-
-- `KAFKA_BROKERS`
-- `REDIS_ADDR`
-- `SCYLLA_HOST`
-
-変更後は再適用します。
+必要ならインフラも停止します。
 
 ```bash
-# 変更済みマニフェストを再反映
-kubectl apply -f backend/chat/k8s/deployment.yaml
+cd /Users/chiharu-kuwabara/dev/boardroom/appinfra
+docker compose down
 ```
+
+## トラブルシュート
+
+```bash
+# Podの状態
+kubectl get pods -o wide
+
+# 特定サービスのログ
+kubectl logs deploy/chat-api-query --tail=200
+kubectl logs deploy/chat-consumer-chat --tail=200
+
+# ingress の確認
+kubectl get ingress -o wide
+```
+
+`chat-consumer-chat` が `localhost:9092` へ接続しようとしているログが出る場合は、Kafka の `advertised.listeners` を見直して `appinfra` 側を再起動してください。

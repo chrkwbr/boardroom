@@ -145,6 +145,17 @@ spec:
           envFrom:
             - configMapRef:
                 name: chat-app-config
+          env:
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: KAFKA_BROKERS
+            - name: REDIS_ADDR
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: REDIS_ADDR
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -167,3 +178,14 @@ spec:
           envFrom:
             - configMapRef:
                 name: chat-app-config
+          env:
+            - name: KAFKA_BROKERS
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: KAFKA_BROKERS
+            - name: SCYLLA_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: chat-app-config
+                  key: SCYLLA_HOST

@@ -50,3 +50,34 @@ build-and-load-chat-images:
 
 # 互換エイリアス
 orb-load-all: load-chat-images
+
+k8s-apply:
+	$(CHAT_MAKE) k8s-apply
+
+k8s-delete:
+	$(CHAT_MAKE) k8s-delete
+
+k8s-restart:
+	$(CHAT_MAKE) k8s-restart
+
+k8s-status:
+	$(CHAT_MAKE) k8s-status
+
+k8s-logs:
+	$(CHAT_MAKE) k8s-logs
+
+k8s-endpoints:
+	$(CHAT_MAKE) k8s-endpoints
+
+k8s-port-forward-start:
+	$(CHAT_MAKE) k8s-port-forward-start
+
+k8s-port-forward-stop:
+	$(CHAT_MAKE) k8s-port-forward-stop
+
+k8s-port-forward-status:
+	$(CHAT_MAKE) k8s-port-forward-status
+
+# build + apply + restart + status
+k8s-deploy:
+	$(CHAT_MAKE) k8s-deploy
