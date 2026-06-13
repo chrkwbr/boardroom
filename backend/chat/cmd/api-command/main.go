@@ -6,11 +6,31 @@ import (
 	"chat-api-command/internal/usecase"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
+
+func kafkaBrokers() []string {
+	brokers := strings.TrimSpace(os.Getenv("KAFKA_BROKERS"))
+	if brokers == "" {
+		return []string{"localhost:9092"}
+	}
+	parts := strings.Split(brokers, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		v := strings.TrimSpace(p)
+		if v != "" {
+			out = append(out, v)
+		}
+	}
+	if len(out) == 0 {
+		return []string{"localhost:9092"}
+	}
+	return out
+}
 
 func main() {
 	r := gin.Default()
@@ -23,7 +43,7 @@ func main() {
 	}))
 
 	// == Chat API ==
-	eventPublisher := pubsub.NewKafkaWriter([]string{"localhost:9092"})
+	eventPublisher := pubsub.NewKafkaWriter(kafkaBrokers())
 	chatCommandApi := api.NewChatCommandController(
 		usecase.NewChatUseCase(
 			eventPublisher,

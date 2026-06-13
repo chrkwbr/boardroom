@@ -1,111 +1,110 @@
-# ローカル開発環境 構築手順 (Kubernetes / Helm 編)
+# Boardroom Kubernetes Runbook
 
-手元の Mac (OrbStack) 上の Kubernetes クラスター内に、Go アプリケーションが使用するミドルウェア（Redis, Kafka, ScyllaDB 互換コンテナ）を Helm を用いて一発で構築する手順です。
+OrbStack + kubectl で chat アプリを起動するための最小手順です。
 
-すべてのミドルウェアは Kubernetes 内部のプライベート DNS で名前解決され、Go アプリの各プロセスから透過的に接続可能になります。
+## 1. 前提確認
 
-## 前提条件
+```bash
+# OrbStack の Kubernetes クラスタを起動
+orbctl start k8s
 
-事前に手元の Mac に以下のツールがインストールされ、有効化されていることを確認してください。
-
-- OrbStack: Kubernetes 機能を有効化（Preferences -> Kubernetes -> Enable Kubernetes）
-- Homebrew: パッケージマネージャー
-
-[コマンド]
-```
-brew install helm kubectl
+# いま kubectl が向いているクラスタ(context)を確認
+kubectl config current-context
 ```
 
-## ミドルウェアの構築手順
+`current-context` が `orbstack` になっていることを確認します。
 
-Kubernetes 内に開発用の各コンテナをスタンドアロン（単一ノード）、認証なしの最小構成で立ち上げます。
+## 2. イメージをビルド
 
-### Step 1: Helm レポジトリの追加 & 更新
-共通で使用する Bitnami の公式チャートレポジトリを追加します。
+```bash
+cd /Users/chiharu-kuwabara/dev/boardroom
 
-[コマンド]
-```
-helm repo add bitnami https://charts.bitnami.com/bitnami
-helm repo update
+# chat の各サービスイメージをローカル Docker に build
+make build-chat-images
 ```
 
-### Step 2: Redis (Pub/Sub・WebSocket用) のインストール
+OrbStack は Docker エンジン一体型のため、ローカルで build したイメージをそのまま Kubernetes で使えます。
 
-リアルタイム通知のブロードキャストに使用する Redis を、メモリ消費の少ないスタンドアロンモードで起動します。
+## 3. イメージ存在チェック（任意）
 
-[コマンド]
-```
-helm install boardroom-redis bitnami/redis \
-  --set architecture=standalone \
-  --set auth.enabled=false
-```
+```bash
+cd /Users/chiharu-kuwabara/dev/boardroom
 
-### Step 3: Kafka (イベント駆動用) のインストール
-メッセージのイベント駆動に使用する Kafka を、Zookeeper 不要の KRaft モード・単一ブローカーで起動します。
-
-[コマンド]
-```
-helm install boardroom-kafka bitnami/kafka \
-  --set listeners.client.protocol=PLAINTEXT \
-  --set sasl.enabled=false \
-  --set rbac.create=false \
-  --set broker.replicaCount=1 \
-  --set persistence.enabled=false \
-  --set volumePermissions.enabled=true
+# k8s で使う予定のローカルイメージが存在するか確認
+make orb-load-all
 ```
 
-### Step 4: ScyllaDB / Cassandra (永続ストレージ用) のインストール
-ローカル開発時のマシンリソースを節約するため、ScyllaDB と完全なプロトコル互換性を持つ Cassandra チャートを 1 ノードで流用します。Go 側の CQL ドライバ（gocql等）はそのまま 100% 動作します。
+このターゲットは `boardroom/*:latest` イメージの存在確認を行います。
 
-[コマンド]
-```
-helm install boardroom-scylla bitnami/cassandra \
-  --set replicaCount=1 \
-  --set dbUser.enabled=false
-  --set image.registry=quay.io \
-  --set image.repository=bitnami/cassandra \
-  --set image.tag=5.0.0
+## 4. Deployment 適用
+
+```bash
+cd /Users/chiharu-kuwabara/dev/boardroom
+
+# deployment/service/configmap をクラスタへ反映（作成または更新）
+kubectl apply -f backend/chat/k8s/deployment.yaml
 ```
 
-## 起動ステータスの確認
+## 5. 状態確認
 
-すべての Pod が正常に起動し、STATUS が Running になるまで数分待ちます。
+```bash
+# Deployment の希望状態/現在状態を確認
+kubectl get deploy
 
-[コマンド]
-```
+# Pod の起動状態をリアルタイム監視
 kubectl get pods -w
+
+# Service の公開ポート・到達先を確認
+kubectl get svc
 ```
 
-[正常に起動した際の見本]
+## 6. ログ確認
+
+```bash
+# 各 Deployment 配下 Pod の標準出力ログを追跡
+kubectl logs deploy/chat-api-command -f
+kubectl logs deploy/chat-api-query -f
+kubectl logs deploy/chat-ws -f
+kubectl logs deploy/chat-consumer-notifier -f
+kubectl logs deploy/chat-consumer-chat -f
 ```
-NAME                 READY   STATUS    RESTARTS   AGE
-boardroom-kafka-0           1/1     Running   0          2m
-boardroom-redis-master-0    1/1     Running   0          3m
-boardroom-scylla-0          1/1     Running   0          1m
+
+## 7. ローカルから API を叩く（ポートフォワード）
+
+```bash
+# クラスタ内 Service のポートをローカルへトンネル
+kubectl port-forward svc/chat-api-command 8080:8080
+kubectl port-forward svc/chat-api-query 8081:8081
+kubectl port-forward svc/chat-ws 8082:8082
 ```
 
-## Go アプリケーションからの接続設定 (接続先一覧)
+## 8. 再起動・削除
 
-Kubernetes 内にデプロイする Go アプリの各プロセス（Deployment マニフェストなど）の環境変数には、以下の内部ドメイン（DNS）を指定して接続してください。
-
-- Redis
-接続先: boardroom-redis-master.default.svc.cluster.local:6379
-担当プロセス: chat-ws, consumer-notifier
-
-- Kafka
-接続先: boardroom-kafka.default.svc.cluster.local:9092
-担当プロセス: chat-command, consumer-chat, consumer-notifier
-
-- ScyllaDB
-接続先: boardroom-scylla.default.svc.cluster.local:9042
-担当プロセス: chat-query, consumer-chat
-
-## 環境の削除・初期化
-
-ローカルの検証環境を完全に削除して一からやり直したい場合は、以下のコマンドを実行してください。永続ボリューム（データ実体）も含めてすべてクリーンアップされます。
-
-[コマンド]
+```bash
+# 各 Deployment をローリング再起動（設定変更反映時など）
+kubectl rollout restart deploy/chat-api-command
+kubectl rollout restart deploy/chat-api-query
+kubectl rollout restart deploy/chat-ws
+kubectl rollout restart deploy/chat-consumer-notifier
+kubectl rollout restart deploy/chat-consumer-chat
 ```
-helm uninstall boardroom-redis my-kafka my-scylla
-kubectl delete pvc --all
+
+```bash
+# マニフェストで作成したリソース一式を削除
+kubectl delete -f backend/chat/k8s/deployment.yaml
+```
+
+## 9. 接続先を変更したい場合
+
+`backend/chat/k8s/deployment.yaml` の `ConfigMap` (`chat-app-config`) で以下を変更します。
+
+- `KAFKA_BROKERS`
+- `REDIS_ADDR`
+- `SCYLLA_HOST`
+
+変更後は再適用します。
+
+```bash
+# 変更済みマニフェストを再反映
+kubectl apply -f backend/chat/k8s/deployment.yaml
 ```

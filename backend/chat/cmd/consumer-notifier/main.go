@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/redis/go-redis/v9"
@@ -19,7 +20,7 @@ var (
 func main() {
 	Init()
 	// Kafka → Redis read model 構築
-	k := pubsub.NewKafkaReader([]string{"localhost:9092"}, "chat-events", "redis_pubsub")
+	k := pubsub.NewKafkaReader(kafkaBrokers(), "chat-events", "redis_pubsub")
 	r := notification.NewChatRedisRepository(RedisClient)
 	internal.NewChatNotificationPublisher(k, r).Start()
 
@@ -36,10 +37,37 @@ func main() {
 	log.Println("Shutting down gracefully")
 }
 
+func kafkaBrokers() []string {
+	brokers := strings.TrimSpace(os.Getenv("KAFKA_BROKERS"))
+	if brokers == "" {
+		return []string{"localhost:9092"}
+	}
+	parts := strings.Split(brokers, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		v := strings.TrimSpace(p)
+		if v != "" {
+			out = append(out, v)
+		}
+	}
+	if len(out) == 0 {
+		return []string{"localhost:9092"}
+	}
+	return out
+}
+
+func redisAddr() string {
+	addr := strings.TrimSpace(os.Getenv("REDIS_ADDR"))
+	if addr == "" {
+		return "localhost:6379"
+	}
+	return addr
+}
+
 func Init() {
 	log.Println("Initializing consumer kafka chat")
 	RedisClient = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+		Addr:     redisAddr(),
 		Password: "",
 		DB:       0,
 	})
