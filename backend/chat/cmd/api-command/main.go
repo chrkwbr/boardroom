@@ -1,9 +1,9 @@
 package main
 
 import (
-	"backend/chat/cmd/api-command/internal/api"
-	"backend/chat/cmd/api-command/internal/usecase"
-	"backend/chat/pkg/shared/infra/pubsub/kafka"
+	"boardroom/chat-shared/infra/pubsub/kafka"
+	"chat-api-command/internal/api"
+	"chat-api-command/internal/usecase"
 	"log"
 	"os"
 

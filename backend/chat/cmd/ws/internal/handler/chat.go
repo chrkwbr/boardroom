@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"backend/chat/pkg/shared/infra/hub"
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-shared/infra/hub"
+	"boardroom/chat-shared/readmodel"
 	"encoding/json"
 	"log"
 	"net/http"

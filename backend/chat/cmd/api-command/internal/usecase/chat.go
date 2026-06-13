@@ -1,8 +1,8 @@
 package usecase
 
 import (
-	"backend/chat/pkg/shared/domain"
-	"backend/chat/pkg/shared/infra/pubsub"
+	"boardroom/chat-shared/domain"
+	"boardroom/chat-shared/infra/pubsub"
 	"encoding/json"
 
 	"github.com/google/uuid"

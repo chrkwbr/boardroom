@@ -1,18 +1,17 @@
 z_run-command:
-	cd backend/chat && PORT=8080 go run ./cmd/api-command/main.go
+	cd backend/chat/cmd/api-command && PORT=8080 go run .
 
 z_run-query:
-	cd backend/chat && PORT=8081 go run ./cmd/api-query/main.go
+	cd backend/chat/cmd/api-query && PORT=8081 go run .
 
 z_run-ws:
-	cd backend/chat && PORT=8082 go run ./cmd/ws/main.go
+	cd backend/chat/cmd/ws && PORT=8082 go run .
 
 z_run-consumer-notifier:
-	cd backend/chat && go run ./cmd/consumer-notifier/main.go
+	cd backend/chat/cmd/consumer-notifier && go run .
 
 z_run-consumer-chat:
-	cd backend/chat && go run ./cmd/consumer-chat/main.go
-
+	cd backend/chat/cmd/consumer-chat && go run .
 
 run-backend:
 	trap 'kill 0' SIGINT SIGTERM EXIT; \

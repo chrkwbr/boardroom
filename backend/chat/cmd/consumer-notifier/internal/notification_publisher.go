@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"backend/chat/pkg/shared/domain"
-	"backend/chat/pkg/shared/infra/pubsub"
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-shared/domain"
+	"boardroom/chat-shared/infra/pubsub"
+	"boardroom/chat-shared/readmodel"
 	"context"
 	"encoding/json"
 	"log"

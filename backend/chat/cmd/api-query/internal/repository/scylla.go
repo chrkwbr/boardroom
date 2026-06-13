@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"backend/chat/pkg/shared/readmodel"
+	"boardroom/chat-shared/readmodel"
 	"context"
 
 	"github.com/google/uuid"

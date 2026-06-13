@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"backend/chat/pkg/shared/infra/pubsub"
+	"boardroom/chat-shared/infra/pubsub"
 	"context"
 
 	"github.com/segmentio/kafka-go"
