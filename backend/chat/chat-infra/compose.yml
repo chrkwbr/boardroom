@@ -10,6 +10,7 @@ services:
       interval: 5s
       timeout: 3s
       retries: 20
+    container_name: chat-redis
 
   scylla:
     build:
@@ -26,6 +27,7 @@ services:
       retries: 30
       start_period: 30s
     hostname: scylla
+    container_name: chat-scylla
 
   scylla-init:
     image: scylladb/scylla:2025.1
@@ -43,3 +45,4 @@ services:
     volumes:
       - ./scylla/migrate.sh:/migrate.sh
       - ./scylla/migrations:/migrations
+    container_name: chat-scylla-init
