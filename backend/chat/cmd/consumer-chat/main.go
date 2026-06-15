@@ -9,6 +9,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 )
 
 func kafkaBrokers() []string {
@@ -49,10 +50,27 @@ func scyllaHosts() []string {
 	return out
 }
 
+func connectScyllaWithRetry() (*readmodel.ChatScyllaRepository, error) {
+	const maxAttempts = 30
+	const interval = 2 * time.Second
+
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		repo, err := readmodel.NewChatScyllaRepository(scyllaHosts()...)
+		if err == nil {
+			return repo, nil
+		}
+		lastErr = err
+		log.Printf("Scylla connect attempt %d/%d failed: %v", attempt, maxAttempts, err)
+		time.Sleep(interval)
+	}
+	return nil, lastErr
+}
+
 func main() {
 	log.Println("==== Starting consumer-kafka-chat...")
 
-	scylla, err := readmodel.NewChatScyllaRepository(scyllaHosts()...)
+	scylla, err := connectScyllaWithRetry()
 	if err != nil {
 		log.Fatalf("Failed to connect to ScyllaDB: %v", err)
 	}

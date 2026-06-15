@@ -204,10 +204,10 @@ k8s-deploy: docker-build-and-load-all k8s-apply k8s-restart k8s-status
 .PHONY: compose-up compose-up-build compose-down compose-logs
 
 compose-up:
-	cd .. && docker compose -f compose.yml up -d
+	cd .. && docker compose -f compose.yml up -d --scale chat-ws=2
 
 compose-up-build:
-	cd .. && docker compose -f compose.yml up -d --build
+	cd .. && docker compose -f compose.yml up -d --build --scale chat-ws=2
 
 compose-down:
 	cd .. && docker compose -f compose.yml down

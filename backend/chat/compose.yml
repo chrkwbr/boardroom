@@ -1,3 +1,7 @@
+include:
+  - path:
+      - ./chat-infra/compose.yml
+
 services:
   chat-api-command:
     build:
@@ -8,6 +12,8 @@ services:
       PORT: "8080"
       KAFKA_BROKERS: host.docker.internal:9092
     restart: unless-stopped
+#    depends_on:
+#      - kafka
 
   chat-api-query:
     build:
@@ -16,8 +22,11 @@ services:
     image: boardroom/api-query:latest
     environment:
       PORT: "8081"
-      SCYLLA_HOST: host.docker.internal
+      SCYLLA_HOST: scylla
     restart: unless-stopped
+    depends_on:
+      scylla:
+        condition: service_healthy
 
   chat-ws:
     build:
@@ -26,8 +35,11 @@ services:
     image: boardroom/ws:latest
     environment:
       PORT: "8082"
-      REDIS_ADDR: host.docker.internal:6379
+      REDIS_ADDR: redis:6379
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
 
   chat-consumer-notifier:
     build:
@@ -36,8 +48,12 @@ services:
     image: boardroom/consumer-notifier:latest
     environment:
       KAFKA_BROKERS: host.docker.internal:9092
-      REDIS_ADDR: host.docker.internal:6379
+      REDIS_ADDR: redis:6379
     restart: unless-stopped
+    depends_on:
+#      - kafka
+      redis:
+        condition: service_healthy
 
   chat-consumer-chat:
     build:
@@ -46,8 +62,12 @@ services:
     image: boardroom/consumer-chat:latest
     environment:
       KAFKA_BROKERS: host.docker.internal:9092
-      SCYLLA_HOST: host.docker.internal
+      SCYLLA_HOST: scylla
     restart: unless-stopped
+    depends_on:
+#      - kafka
+      scylla:
+        condition: service_healthy
 
   nginx:
     image: nginx:latest

@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -32,6 +33,23 @@ func scyllaHosts() []string {
 	return out
 }
 
+func connectScyllaWithRetry() (*readmodel.ChatScyllaRepository, error) {
+	const maxAttempts = 30
+	const interval = 2 * time.Second
+
+	var lastErr error
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		repo, err := readmodel.NewChatScyllaRepository(scyllaHosts()...)
+		if err == nil {
+			return repo, nil
+		}
+		lastErr = err
+		log.Printf("Scylla connect attempt %d/%d failed: %v", attempt, maxAttempts, err)
+		time.Sleep(interval)
+	}
+	return nil, lastErr
+}
+
 func main() {
 	r := gin.Default()
 
@@ -42,7 +60,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	scylla, err := readmodel.NewChatScyllaRepository(scyllaHosts()...)
+	scylla, err := connectScyllaWithRetry()
 	if err != nil {
 		log.Fatal("Failed to connect to ScyllaDB:", err)
 	}

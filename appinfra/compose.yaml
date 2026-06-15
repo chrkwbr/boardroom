@@ -1,3 +1,5 @@
+name: chat-app-infra
+
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -35,45 +37,14 @@ services:
       echo 'Topics created.'
       "
 
-  postgres:
-    build:
-      context: ./postgres
-    restart: always
-    ports:
-      - "5433:5432"
-    env_file:
-      - ./postgres/postgres.env
-    volumes:
-      - ./postgres/init:/docker-entrypoint-initdb.d
+#  postgres:
+#    build:
+#      context: ./postgres
+#    restart: always
+#    ports:
+#      - "5433:5432"
+#    env_file:
+#      - ./postgres/postgres.env
+#    volumes:
+#      - ./postgres/init:/docker-entrypoint-initdb.d
 
-  redis:
-    build:
-      context: ./redis
-    restart: always
-    ports:
-      - "6379:6379"
-
-  scylla:
-    build:
-      context: ./scylla
-    restart: always
-    ports:
-      - "9042:9042"
-    volumes:
-      - ./scylla-data:/var/lib/scylla
-
-  scylla-init:
-    image: scylladb/scylla:2025.1
-    depends_on:
-      - scylla
-    entrypoint: ["/bin/sh", "-c"]
-    command: |
-      "
-      echo 'Waiting for ScyllaDB...'
-      until cqlsh scylla 9042 -e 'describe cluster' > /dev/null 2>&1; do sleep 2; done
-      echo 'Running migrations...'
-      SCYLLA_HOST=scylla SCYLLA_PORT=9042 /migrate.sh
-      "
-    volumes:
-      - ./scylla/migrate.sh:/migrate.sh
-      - ./scylla/migrations:/migrations
